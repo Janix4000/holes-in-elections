@@ -2,7 +2,8 @@ import time
 from typing import Optional
 import numpy as np
 from scipy.optimize import basinhopping
-from scipy.spatial import distance
+
+import argparse
 
 VotingHist = np.ndarray
 
@@ -50,18 +51,29 @@ def basing_hopping(votings_hists: list[VotingHist], N: int, niter: int = 1000, s
                 break
         return x
 
-    res = basinhopping(f, x0, stepsize=1, niter=niter, take_step=step_function)
+    res = basinhopping(f, x0, stepsize=1, niter=niter,
+                       take_step=step_function, seed=seed)
     x = np.round_(res.x[:-2]).astype(np.int32)
-    print(f'{f_time:.2f} sec, {time.time() - start_time:.2f} sec')
+    # print(f'{f_time:.2f} sec, {time.time() - start_time:.2f} sec')
     return x, -int(res.fun)
 
 
 if __name__ == '__main__':
-    N = 20
-    M = 20
-    R = 60
+
+    parser = argparse.ArgumentParser(
+        description='Yield distances for next R farthest votings.')
+
+    parser.add_argument('N', type=int, help='Number of voters')
+    parser.add_argument('M', type=int, help='Number of candidates')
+    parser.add_argument('R', type=int, help='Number of new votings to yield')
+
+    args = parser.parse_args()
+
+    N = args.N
+    M = args.M
+    R = args.R
     votings_hists = [np.array([0] * M), np.array([N] * M)]
-    for _ in range(R):
+    for i in range(3, R + 3):
         x, score = basing_hopping(votings_hists, N, niter=N*M*10)
-        print(f'{score}: {x}')
+        print(f'{i},{score},{score/(N*M):.4f}')
         votings_hists.append(x)
