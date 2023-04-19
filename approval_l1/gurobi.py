@@ -21,16 +21,17 @@ def gurobi_ilp(votings_hists: list[VotingHist], N: int) -> VotingHist:
     model = gp.Model(env=env)
 
 
-    ys = model.addVars(M, vtype=GRB.INTEGER, name="ys")
-    model.addConstr(N >= ys[0], "N>=ys[0]")
-    model.addConstrs((ys[i] >= ys[i + 1] for i in range(M - 1)), "ys_monotonicity")
-    model.addConstr(ys[M - 1] == 0, "ys[M-1]==0")
+    vs = model.addVars(M, vtype=GRB.INTEGER, name="vs")
+    model.addConstr(N >= vs[0], "N>=vs[0]")
+    model.addConstrs((vs[i] >= vs[i + 1] for i in range(M - 1)), "vs_monotonicity")
+    model.addConstr(vs[M - 1] >= 0, "vs[M-1]>=0")
     
-    vh = model.addVars(R, M, vtype=GRB.INTEGER, name="vh")
-    model.addConstrs((vh[r, i] == votings_hists[r][i] for i in range(M) for r in range(R)), "vh")
+    # hs = model.addVars(R, M, vtype=GRB.INTEGER, name="hs")
+    # model.addConstrs((hs[r, i] == votings_hists[r][i] for i in range(M) for r in range(R)), "hs")
     
     diffs = model.addVars(R, M, vtype=GRB.INTEGER, name="diffs")
-    model.addConstrs((diffs[r, i] == ys[i] - vh[r, i] for i in range(M) for r in range(R)), "diffs")
+    # model.addConstrs((diffs[r, i] == vs[i] - hs[r, i] for i in range(M) for r in range(R)), "diffs")
+    model.addConstrs((diffs[r, i] == vs[i] - votings_hists[r][i] for i in range(M) for r in range(R)), "diffs")
 
     diffs_abs = model.addVars(R, M, vtype=GRB.INTEGER, name="diffs_abs")
     model.addConstrs((diffs_abs[r, i] == gp.abs_(diffs[r, i])
@@ -48,7 +49,7 @@ def gurobi_ilp(votings_hists: list[VotingHist], N: int) -> VotingHist:
 
     model.optimize()
     
-    votings_hist = [int(ys[i].X) for i in range(M)]
+    votings_hist = [int(vs[i].X) for i in range(M)]
     dist = int(min_constr.X)
     
     for v in model.getVars():
