@@ -11,9 +11,10 @@ except ImportError:
 VotingHist = list[int]
 
 
-def gurobi_ilp(votings_hists: list[VotingHist], N: int) -> VotingHist:
+def gurobi_ilp(votings_hists: list[VotingHist], N: int, max_dist: int = None) -> VotingHist:
     M = len(votings_hists[0])
     R = len(votings_hists)
+    max_dist = max_dist or N * M
 
     env = gp.Env(empty=True)
     env.setParam('OutputFlag', 0)
@@ -26,11 +27,7 @@ def gurobi_ilp(votings_hists: list[VotingHist], N: int) -> VotingHist:
                      for i in range(M - 1)), "vs_monotonicity")
     model.addConstr(vs[M - 1] >= 0, "vs[M-1]>=0")
 
-    # hs = model.addVars(R, M, vtype=GRB.INTEGER, name="hs")
-    # model.addConstrs((hs[r, i] == votings_hists[r][i] for i in range(M) for r in range(R)), "hs")
-
     diffs = model.addVars(R, M, vtype=GRB.INTEGER, name="diffs", lb=-N, ub=N)
-    # model.addConstrs((diffs[r, i] == vs[i] - hs[r, i] for i in range(M) for r in range(R)), "diffs")
     model.addConstrs((diffs[r, i] == vs[i] - votings_hists[r][i]
                      for i in range(M) for r in range(R)), "diffs")
 
@@ -44,7 +41,7 @@ def gurobi_ilp(votings_hists: list[VotingHist], N: int) -> VotingHist:
                                               for i in range(M)) for r in range(R)), "dists")
 
     min_constr = model.addVar(
-        vtype=GRB.INTEGER, name="min_constr", lb=0, ub=N*M)
+        vtype=GRB.INTEGER, name="min_constr", lb=0, ub=max_dist)
     model.addGenConstrMin(min_constr, dists, name="min_constr")
 
     model.setObjective(min_constr, GRB.MAXIMIZE)
@@ -81,7 +78,9 @@ if __name__ == '__main__':
     M = args.M
     R = args.R
     votings_hists = [[0] * M, [N] * M]
+    max_expected_dist = N * M // 2
     for i in range(3, R + 3):
-        x, score = gurobi_ilp(votings_hists, N)
-        print(f'{i},{score},{score/(N*M):.4f}')
+        x, dist = gurobi_ilp(votings_hists, N, max_dist=max_expected_dist)
+        print(f'{i},{dist},{dist/(N*M):.4f}')
         votings_hists.append(x)
+        max_expected_dist = dist
