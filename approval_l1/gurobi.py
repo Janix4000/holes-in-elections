@@ -1,4 +1,5 @@
 import argparse
+import time
 
 try:
     import gurobipy as gp
@@ -51,17 +52,7 @@ def gurobi_ilp(votings_hists: list[VotingHist], N: int, max_dist: int = None) ->
     votings_hist = [int(vs[i].X) for i in range(M)]
     dist = int(min_constr.X)
 
-    # for v in model.getVars():
-    #     print('%s %g' % (v.VarName, v.X))
-
-    # print('Obj: %g' % model.ObjVal)
-
     return votings_hist, dist
-    # except gp.GurobiError as e:
-    #     print('Error code ' + str(e.errno) + ': ' + str(e))
-
-    # except AttributeError:
-    #     print('Encountered an attribute error')
 
 
 if __name__ == '__main__':
@@ -79,8 +70,12 @@ if __name__ == '__main__':
     R = args.R
     votings_hists = [[0] * M, [N] * M]
     max_expected_dist = N * M // 2
+    print('r,dist,dist_prop,time')
     for i in range(3, R + 3):
+        start = time.time()
         x, dist = gurobi_ilp(votings_hists, N, max_dist=max_expected_dist)
-        print(f'{i},{dist},{dist/(N*M):.4f}')
+        dt = time.time() - start
+        print(f'{i},{dist},{dist/(N*M):.4f},{dt:.4f}')
+        print(x)
         votings_hists.append(x)
         max_expected_dist = dist

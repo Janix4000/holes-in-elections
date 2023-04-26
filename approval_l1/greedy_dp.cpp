@@ -130,9 +130,17 @@ signed main(int argc, char** args) {
     const int R = stoi(args[3]);
     vector<voting_hist_t> votings_hist = {vi(M, N), vi(M, 0)};
 
+    cout << "r,dist,dist_prop,time" << endl;
     for (int i = 0; i < R; i++) {
+        auto start_time = chrono::high_resolution_clock::now();
         auto [res, score] = next_voting_hist(votings_hist, N);
-        cout << i + 3 << ',' << score << ',' << double(score) / (N * M) << endl;
+        auto end_time = chrono::high_resolution_clock::now();
+        auto elapsed_time =
+            chrono::duration_cast<chrono::milliseconds>(end_time - start_time)
+                .count();
+        cout << i + 3 << ',' << score << ',' << double(score) / (N * M) << ','
+             << elapsed_time / 1000. << endl;
+
         // print_vec(res);
         // cout << endl;
         votings_hist.push_back(res);

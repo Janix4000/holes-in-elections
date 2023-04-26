@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <chrono>
 #include <iomanip>
 #include <iostream>
 #include <vector>
@@ -39,7 +40,6 @@ pair<voting_hist_t, int> next_voting_hist(
     const vector<voting_hist_t>& votings_hist, const int N) {
     const int R = votings_hist.size();
     const int M = votings_hist.front().size();
-    const int INF = N * M + 1;
 
     vector<vector<Cell>> cells(M, vector<Cell>(N + 1));
 
@@ -59,7 +59,7 @@ pair<voting_hist_t, int> next_voting_hist(
             const int x_prev = x - 1;
             for (int y_prev = N; y_prev >= y; --y_prev) {
                 const auto& prev_cell = cells[x_prev][y_prev];
-                for (int idx = 0; idx < prev_cell.nodes.size(); ++idx) {
+                for (int idx = 0; idx < (int)prev_cell.nodes.size(); ++idx) {
                     const auto& prev_node = prev_cell.nodes[idx];
                     Node node;
                     node.from_y = y_prev;
@@ -77,7 +77,7 @@ pair<voting_hist_t, int> next_voting_hist(
 
     vector<Node> backs_maxs(N + 1);
 
-    for (size_t y = 0; y < N + 1; y++) {
+    for (int y = 0; y < N + 1; y++) {
         auto& cell = cells.back()[y];
         for (auto& node : cell.nodes) {
             node.min_dist = *min_element(all(node.single_dists));
@@ -115,13 +115,25 @@ signed main(int argc, char** args) {
     const int N = stoi(args[1]);
     const int M = stoi(args[2]);
     const int R = stoi(args[3]);
-    vector<voting_hist_t> votings_hist = {vi(M, N), vi(M, 0)};
+    vector<voting_hist_t> votings_hist = {
+        vi(M, N), vi(M, 0), {16, 16, 16, 16, 0, 0, 0, 0}};
+    const size_t start_N = votings_hist.size();
 
+    cout << "r,dist,dist_prop,time" << endl;
     for (int i = 0; i < R; i++) {
+        auto start_time = chrono::high_resolution_clock::now();
         auto [res, score] = next_voting_hist(votings_hist, N);
-        cout << i + 3 << ',' << score << ',' << double(score) / (N * M) << endl;
+        auto end_time = chrono::high_resolution_clock::now();
+        auto elapsed_time =
+            chrono::duration_cast<chrono::milliseconds>(end_time - start_time)
+                .count();
+        cout << i + start_N + 1 << ',' << score << ','
+             << double(score) / (N * M) << ',' << setprecision(4)
+             << double(elapsed_time / 1000.) << endl;
+
         print_vec(res);
         cout << endl;
+
         votings_hist.push_back(res);
     }
 }

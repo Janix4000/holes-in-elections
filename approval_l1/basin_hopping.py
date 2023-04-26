@@ -73,7 +73,11 @@ if __name__ == '__main__':
     M = args.M
     R = args.R
     votings_hists = [np.array([0] * M), np.array([N] * M)]
+
+    print('r,dist,dist_prop,time')
     for i in range(3, R + 3):
+        start = time.time()
         x, score = basing_hopping(votings_hists, N, niter=N*M*10)
-        print(f'{i},{score},{score/(N*M):.4f}')
+        dt = time.time() - start
+        print(f'{i},{score},{score/(N*M):.4f},{dt:.4f}')
         votings_hists.append(x)
