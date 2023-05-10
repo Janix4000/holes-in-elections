@@ -1,40 +1,33 @@
-#include <algorithm>
-#include <chrono>
-#include <iomanip>
-#include <iostream>
-#include <vector>
+#pragma once
 
-using namespace std;
+#include "definitions.hpp"
+#include "utils.hpp"
 
-#define all(x) (x).begin(), (x).end()
+namespace brute {
 
-using vi = vector<int>;
-using vvi = vector<vi>;
-using vvvi = vector<vvi>;
-
-using voting_hist_t = vector<int>;
-
-void print_vec(const vector<int>& v) {
-    cout << "[";
-    if (v.size()) {
-        cout << v.front();
-    }
-    for (size_t i = 1; i < v.size(); i++) {
-        cout << ", " << v[i];
-    }
-    cout << "]";
-}
-
+namespace {
 struct Node {
     int from_y = -1;
     int from_idx = -1;
     int min_dist = 0;
     vector<int> single_dists;
+
+    bool operator<=(const Node& rhs) const {
+        if (rhs.single_dists.empty()) return true;
+        if (single_dists.empty()) return false;
+        for (size_t i = 0; i < single_dists.size(); i++) {
+            if (single_dists[i] > rhs.single_dists[i]) return false;
+        }
+        return true;
+    }
 };
 
 struct Cell {
     vector<Node> nodes;
 };
+}  // namespace
+
+void remove_non_maximal(vector<Node>& nodes) {}
 
 pair<voting_hist_t, int> next_voting_hist(
     const vector<voting_hist_t>& votings_hist, const int N) {
@@ -72,6 +65,30 @@ pair<voting_hist_t, int> next_voting_hist(
                     cells[x][y].nodes.push_back(node);
                 }
             }
+
+            auto& cell = cells[x][y];
+
+            // remove_if(all(cell.nodes), )
+
+            vector<Node> maximal_nodes;
+            copy_if(all(cell.nodes), back_inserter(maximal_nodes),
+                    [&cell](const auto& node) {
+                        return none_of(
+                            all(cell.nodes), [&node](const auto& other_node) {
+                                if (other_node.single_dists.size() !=
+                                    node.single_dists.size()) {
+                                    return false;
+                                }
+                                bool all_greater = true;
+                                for (size_t i = 0; i < node.single_dists.size();
+                                     i++) {
+                                    all_greater &= other_node.single_dists[i] >
+                                                   node.single_dists[i];
+                                }
+                                return all_greater;
+                            });
+                    });
+            cell.nodes = maximal_nodes;
         }
     }
 
@@ -105,35 +122,4 @@ pair<voting_hist_t, int> next_voting_hist(
 
     return {res, max_el->min_dist};
 }
-
-signed main(int argc, char** args) {
-    if (argc != 3 + 1) {
-        cerr << "Usage: " << args[0]
-             << " N(voters) M(candidates) R(additional votings)" << endl;
-        return 1;
-    }
-    const int N = stoi(args[1]);
-    const int M = stoi(args[2]);
-    const int R = stoi(args[3]);
-    vector<voting_hist_t> votings_hist = {
-        vi(M, N), vi(M, 0), {16, 16, 16, 16, 0, 0, 0, 0}};
-    const size_t start_N = votings_hist.size();
-
-    cout << "r,dist,dist_prop,time" << endl;
-    for (int i = 0; i < R; i++) {
-        auto start_time = chrono::high_resolution_clock::now();
-        auto [res, score] = next_voting_hist(votings_hist, N);
-        auto end_time = chrono::high_resolution_clock::now();
-        auto elapsed_time =
-            chrono::duration_cast<chrono::milliseconds>(end_time - start_time)
-                .count();
-        cout << i + start_N + 1 << ',' << score << ','
-             << double(score) / (N * M) << ',' << setprecision(4)
-             << double(elapsed_time / 1000.) << endl;
-
-        print_vec(res);
-        cout << endl;
-
-        votings_hist.push_back(res);
-    }
-}
+}  // namespace brute

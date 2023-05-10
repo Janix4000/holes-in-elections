@@ -8,8 +8,12 @@
       "type": "lldb",
       "request": "launch",
       "name": "Debug",
-      "program": "${workspaceFolder}/a.out",
-      "args": [],
+      "program": "${workspaceFolder}/approval_l1/out/a.out",
+      "args": [
+        "16",
+        "8",
+        "5"
+      ],
       "cwd": "${workspaceFolder}"
     }
   ]
