@@ -2,10 +2,7 @@ cmake_minimum_required(VERSION 3.12)
 project(my_project)
 
 # Source files
-set(SOURCES
-    src/brute.cpp
-    src/greedy_dp.cpp
-)
+file(GLOB SOURCES "src/*.cpp")
 
 # Set C++ standard to C++17
 set(CMAKE_CXX_STANDARD 17)
