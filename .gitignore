@@ -276,3 +276,5 @@ pyrightconfig.json
 
 **/*.out.dSYM/
 **/res/*
+approval_l1/scripts/test.cpp
+approval_l1/scripts/test2.cpp

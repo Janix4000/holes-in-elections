@@ -1,20 +1,39 @@
 #include "brute.hpp"
 
 #include <algorithm>
+#include <boost/program_options.hpp>
 #include <chrono>
 #include <iomanip>
 #include <iostream>
 #include <vector>
 
-signed main(int argc, char** args) {
-    if (argc != 3 + 1) {
-        cerr << "Usage: " << args[0]
-             << " N(voters) M(candidates) R(additional votings)" << endl;
+namespace po = boost::program_options;
+
+signed main(int argc, char** argv) {
+    po::options_description desc("Allowed options");
+    desc.add_options()("help", "produce help message")(
+        // "input", po::value<std::string>(), "input file")(
+        // "output", po::value<std::string>(), "output file")(
+        "voters,N", po::value<int>(), "number of voters")(
+        "candidates,M", po::value<int>(), "number of candidates")(
+        "additional,R", po::value<int>(), "number of new votings");
+
+    po::variables_map vm;
+    po::store(po::parse_command_line(argc, argv, desc), vm);
+    po::notify(vm);
+
+    if (vm.count("help")) {
+        std::cout << desc << "\n";
         return 1;
     }
-    const int N = stoi(args[1]);
-    const int M = stoi(args[2]);
-    const int R = stoi(args[3]);
+
+    const int N = vm["voters"].as<int>();
+    const int M = vm["candidates"].as<int>();
+    const int R = vm["additional"].as<int>();
+
+    // const int N = stoi(argv[1]);
+    // const int M = stoi(argv[2]);
+    // const int R = stoi(argv[3]);
     vector<voting_hist_t> votings_hist = {vi(M, N), vi(M, 0)};
     const size_t start_N = votings_hist.size();
 
