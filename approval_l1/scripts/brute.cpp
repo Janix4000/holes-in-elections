@@ -3,24 +3,32 @@
 #include <algorithm>
 #include <boost/program_options.hpp>
 #include <chrono>
+// #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <nlohmann/json.hpp>
 #include <vector>
 
+using json = nlohmann::json;
 namespace po = boost::program_options;
 
 signed main(int argc, char** argv) {
     po::options_description desc("Allowed options");
     desc.add_options()("help", "produce help message")(
-        // "input", po::value<std::string>(), "input file")(
-        // "output", po::value<std::string>(), "output file")(
-        "voters,N", po::value<int>(), "number of voters")(
-        "candidates,M", po::value<int>(), "number of candidates")(
-        "additional,R", po::value<int>(), "number of new votings");
+        "voters,N", po::value<int>()->required(), "number of voters")(
+        "candidates,M", po::value<int>()->required(), "number of candidates")(
+        "additional,R", po::value<int>()->required(), "number of new votings")(
+        "json", po::value<bool>()->default_value(false), "json output?")(
+        "verbose", po::value<int>()->default_value(1), "verbose level");
 
     po::variables_map vm;
-    po::store(po::parse_command_line(argc, argv, desc), vm);
-    po::notify(vm);
+    try {
+        po::store(po::parse_command_line(argc, argv, desc), vm);
+        po::notify(vm);
+    } catch (const po::error& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+        return 1;
+    }
 
     if (vm.count("help")) {
         std::cout << desc << "\n";
@@ -31,11 +39,10 @@ signed main(int argc, char** argv) {
     const int M = vm["candidates"].as<int>();
     const int R = vm["additional"].as<int>();
 
-    // const int N = stoi(argv[1]);
-    // const int M = stoi(argv[2]);
-    // const int R = stoi(argv[3]);
     vector<voting_hist_t> votings_hist = {vi(M, N), vi(M, 0)};
     const size_t start_N = votings_hist.size();
+
+    const int verbose = vm["verbose"].as<int>();
 
     cout << "r,dist,dist_prop,time" << endl;
     for (int i = 0; i < R; i++) {
@@ -45,13 +52,19 @@ signed main(int argc, char** argv) {
         auto elapsed_time =
             chrono::duration_cast<chrono::milliseconds>(end_time - start_time)
                 .count();
+
+        votings_hist.push_back(res);
+        if (verbose < 1) continue;
         cout << i + start_N + 1 << ',' << score << ','
              << double(score) / (N * M) << ',' << setprecision(4)
              << double(elapsed_time / 1000.) << endl;
-
+        if (verbose < 2) continue;
         print_vec(res);
         cout << endl;
+    }
 
-        votings_hist.push_back(res);
+    if (vm["json"].as<bool>()) {
+        json jsonData = votings_hist;
+        std::cout << jsonData.dump(4) << std::endl;
     }
 }
