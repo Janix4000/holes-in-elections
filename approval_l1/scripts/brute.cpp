@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <boost/program_options.hpp>
 #include <chrono>
-// #include <fstream>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <nlohmann/json.hpp>
@@ -19,7 +19,8 @@ signed main(int argc, char** argv) {
         "candidates,M", po::value<int>()->required(), "number of candidates")(
         "additional,R", po::value<int>()->required(), "number of new votings")(
         "json", po::value<bool>()->default_value(false), "json output?")(
-        "verbose", po::value<int>()->default_value(1), "verbose level");
+        "verbose", po::value<int>()->default_value(1), "verbose level")(
+        "load-hists", po::value<std::string>(), "path to json file with hists");
 
     po::variables_map vm;
     try {
@@ -38,13 +39,22 @@ signed main(int argc, char** argv) {
     const int N = vm["voters"].as<int>();
     const int M = vm["candidates"].as<int>();
     const int R = vm["additional"].as<int>();
+    const int verbose = vm["verbose"].as<int>();
+    const bool json_output = vm["json"].as<bool>();
 
-    vector<voting_hist_t> votings_hist = {vi(M, N), vi(M, 0)};
+    vector<voting_hist_t> votings_hist;
+    if (vm.count("load-hists")) {
+        std::ifstream ifs(vm["load-hists"].as<std::string>());
+        json jsonData = json::parse(ifs);
+        votings_hist = jsonData.get<vector<voting_hist_t>>();
+    } else {
+        votings_hist = {vi(M, N), vi(M, 0)};
+    }
     const size_t start_N = votings_hist.size();
 
-    const int verbose = vm["verbose"].as<int>();
+    if (verbose >= 1) cout << "r,dist,dist_prop,time" << endl;
+    if (json_output) cout << "[\n";
 
-    cout << "r,dist,dist_prop,time" << endl;
     for (int i = 0; i < R; i++) {
         auto start_time = chrono::high_resolution_clock::now();
         auto [res, score] = brute::next_voting_hist(votings_hist, N);
@@ -54,17 +64,19 @@ signed main(int argc, char** argv) {
                 .count();
 
         votings_hist.push_back(res);
-        if (verbose < 1) continue;
-        cout << i + start_N + 1 << ',' << score << ','
-             << double(score) / (N * M) << ',' << setprecision(4)
-             << double(elapsed_time / 1000.) << endl;
-        if (verbose < 2) continue;
-        print_vec(res);
-        cout << endl;
+        if (verbose >= 1)
+            cout << i + start_N + 1 << ',' << score << ','
+                 << double(score) / (N * M) << ',' << setprecision(4)
+                 << double(elapsed_time / 1000.) << endl;
+        if (json_output) {
+            cout << "\t";
+            print_vec(res);
+            if (i != R - 1) cout << ",";
+            cout << endl;
+        }
     }
 
-    if (vm["json"].as<bool>()) {
-        json jsonData = votings_hist;
-        std::cout << jsonData.dump(4) << std::endl;
+    if (json_output) {
+        cout << "]";
     }
 }
