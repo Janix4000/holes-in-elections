@@ -66,20 +66,28 @@ signed main(int argc, char** argv) {
 
     for (int i = 0; i < R; i++) {
         auto start_time = chrono::high_resolution_clock::now();
-        auto [res, score] = brute::next_voting_hist(votings_hist, N);
+        std::pair<voting_hist_t, int> res;
+        if (algorithm == "brute") {
+            res = brute::next_voting_hist(votings_hist, N);
+        } else if (algorithm == "greedy_dp") {
+            res = greedy_dp::next_voting_hist(votings_hist, N);
+        }
+        auto [next_voting_hist, score] =
+            brute::next_voting_hist(votings_hist, N);
+
         auto end_time = chrono::high_resolution_clock::now();
         auto elapsed_time =
             chrono::duration_cast<chrono::milliseconds>(end_time - start_time)
                 .count();
 
-        votings_hist.push_back(res);
+        votings_hist.push_back(next_voting_hist);
         if (verbose >= 1)
             cout << i + start_N + 1 << ',' << score << ','
                  << double(score) / (N * M) << ',' << setprecision(4)
                  << double(elapsed_time / 1000.) << endl;
         if (json_output) {
             cout << "\t";
-            print_vec(res);
+            print_vec(next_voting_hist);
             if (i != R - 1) cout << ",";
             cout << endl;
         }
