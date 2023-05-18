@@ -50,6 +50,8 @@ if __name__ == '__main__':
             print(f'{i},{dist},{dist/(N*M):.4f},{dt:.4f}')
         if args.json_output:
             print(x)
+            if i < R + 2:
+                print(',')
 
         max_expected_dist = dist
         votings_hists.append(x)

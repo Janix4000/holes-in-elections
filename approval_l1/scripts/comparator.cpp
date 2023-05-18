@@ -18,7 +18,6 @@ signed main(int argc, char** argv) {
     desc.add_options()("help", "produce help message")(
         "voters,N", po::value<int>()->required(), "number of voters")(
         "candidates,M", po::value<int>()->required(), "number of candidates")(
-        "additional,R", po::value<int>()->required(), "number of new votings")(
         "algorithm,A", po::value<std::string>()->default_value("brute"),
         "chosen algorithm <brute|greedy_dp>")(
         "json", po::value<bool>()->default_value(false), "json output?")(
