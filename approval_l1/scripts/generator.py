@@ -31,17 +31,20 @@ if __name__ == '__main__':
     M = args.M
     R = args.R
     votings_hists = [np.array([0] * M), np.array([N] * M)]
+    R_Init = len(votings_hists)
 
     if args.verbose >= 1:
         print('r,dist,dist_prop,time')
     if args.json_output:
-        print('[')
+        print('{"hists":[')
+        for voting in votings_hists:
+            print(f'\t{list(voting)},')
     max_expected_dist = N * M // 2
-    for i in range(3, R + 3):
+    for i in range(R_Init + 1, R + R_Init + 1):
         start = time.time()
         if args.algorithm == 'bh':
             x, dist = bh.basing_hopping(
-                votings_hists, N, niter=N*M*10, seed=2137)
+                votings_hists, N, niter=N*M*2, seed=2137)
         elif args.algorithm == 'gurobi':
             x, dist = gurobi.gurobi_ilp(votings_hists, N)
         dt = time.time() - start
@@ -49,11 +52,9 @@ if __name__ == '__main__':
         if args.verbose >= 1:
             print(f'{i},{dist},{dist/(N*M):.4f},{dt:.4f}')
         if args.json_output:
-            print(x)
-            if i < R + 2:
-                print(',')
+            print(f'\t{x}', end=',\n' if i < R + R_Init else '\n')
 
         max_expected_dist = dist
         votings_hists.append(x)
     if args.json_output:
-        print(']')
+        print(']}')

@@ -30,37 +30,36 @@ def basing_hopping(votings_hists: list[VotingHist], N: int, niter: int = 1000, s
     rng = np.random.default_rng(seed)
     M = len(votings_hists[0])
     R = len(votings_hists)
-    x0 = np.sort(rng.integers(0, N, endpoint=True, size=M+2))
-    x0[-1] = 0
-    x0[M] = N
-    f_time = 0
-    step_size = step_size or round(math.sqrt(N * R))
-    start_time = time.time()
+    # x0 = np.sort(rng.integers(0, N, endpoint=True, size=M+2))
+    x0 = np.array([N//2] * (M + 2))
+    x0[-1] = N
+    x0[M] = 0
+    step_size = step_size or round(math.pow(N * M * R, 1/3))
 
     def f(x):
-        nonlocal votings_hists, f_time
-        start = time.time()
-        d = -distance_across(votings_hists, to_int(x))
-        f_time += time.time() - start
+        nonlocal votings_hists
+        x = to_int(x)
+        d = -distance_across(votings_hists, x)
         return d
 
     def step_function(x):
         nonlocal rng
         x = to_int(x)
-        for _ in range(rng.integers(1, step_size)):
+        steps = rng.integers(1, step_size + 1)
+        for _ in range(steps):
             while True:
                 idx = rng.integers(0, M)
                 dx = rng.choice([-1, 1])
-                if x[idx - 1] <= x[idx] + dx <= x[idx + 1]:
+                if x[idx - 1] >= x[idx] + dx >= x[idx + 1]:
                     x[idx] += dx
                     break
         return x
 
-    res = basinhopping(f, x0, stepsize=1, niter=niter,
+    res = basinhopping(f, x0, niter=niter,
                        take_step=step_function, seed=seed)
     x = np.round_(res.x[:-2]).astype(np.int32)
     # print(f'{f_time:.2f} sec, {time.time() - start_time:.2f} sec')
-    return list(reversed(x)), -int(res.fun)
+    return list(x), -int(res.fun)
 
 
 if __name__ == '__main__':

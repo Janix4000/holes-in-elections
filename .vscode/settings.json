@@ -60,6 +60,19 @@
     "typeinfo": "cpp",
     "unordered_map": "cpp",
     "variant": "cpp",
-    "algorithm": "cpp"
+    "algorithm": "cpp",
+    "__tree": "cpp",
+    "__verbose_abort": "cpp",
+    "any": "cpp",
+    "bit": "cpp",
+    "deque": "cpp",
+    "forward_list": "cpp",
+    "fstream": "cpp",
+    "map": "cpp",
+    "span": "cpp",
+    "stack": "cpp",
+    "valarray": "cpp",
+    "numeric": "cpp",
+    "ranges": "cpp"
   }
 }
