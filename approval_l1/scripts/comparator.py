@@ -1,12 +1,29 @@
 import json
 import gurobi
+import app_format
 import basin_hopping as bh
 import time
 import numpy as np
+import os
 
 import argparse
 
 VotingHist = np.ndarray
+
+
+def load_mapel(source: str) -> list[list[int]]:
+    if source.endswith(".app"):
+        files_paths = [source]
+    else:
+        files_paths = list(os.listdir(source))
+    elections_histograms = []
+    for path in files_paths:
+        if not path.endswith(".app"):
+            continue
+        election, _N = app_format.load(os.path.join(source, path))
+        elections_histograms.append(app_format.to_histograms(election, N))
+
+    return elections_histograms
 
 
 if __name__ == '__main__':
@@ -20,15 +37,25 @@ if __name__ == '__main__':
     parser.add_argument('--algorithm', type=str, help='Algorithm to use',
                         default='bh', choices=['bh', 'gurobi'])
     parser.add_argument('--json_input', type=str,
-                        help='Load votings from file')
+                        help='Load votings from the json file')
+    parser.add_argument('--mapel_input', type=str,
+                        help='Load votings from the mapel file')
 
     args = parser.parse_args()
 
     N = args.N
     M = args.M
     R = args.R
-    with open(args.json_input) as f:
-        votings_hists_loaded = json.loads(f.read())["hists"]
+
+    if args.mapel_input and args.json_input:
+        raise ValueError('Only one input file can be specified')
+
+    if args.json_input:
+        with open(args.json_input) as f:
+            votings_hists_loaded = json.loads(f.read())["hists"]
+    elif args.mapel_input:
+        votings_hists_loaded = app_format.load_mapel(args.mapel_input)
+
     R = len(votings_hists_loaded)
 
     print('r,dist,dist_prop,time,from')
