@@ -74,5 +74,8 @@
     "valarray": "cpp",
     "numeric": "cpp",
     "ranges": "cpp"
-  }
+  },
+  "cSpell.words": [
+    "tqdm"
+  ]
 }
