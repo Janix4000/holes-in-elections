@@ -2,53 +2,76 @@ import time
 from typing import Optional
 import numpy as np
 from scipy.optimize import basinhopping
-
 import math
-
 import argparse
+
 
 VotingHist = np.ndarray
 
 
-# def dist(x, y): return distance.minkowski(x, y, 1).astype(np.int32)
-
-def dist(x, y):
-    d = np.sum(np.abs(x - y)).astype(np.int32)
-    # print(f'{x=}, {y=}, {d=}')
-    return d
+def __distance_across(approvalwise_vectors: np.ndarray, x: VotingHist) -> int:
+    return np.sum(np.abs(approvalwise_vectors - x[:-2]), axis=1).min()
 
 
-def distance_across(votings_hists: list[VotingHist], x: VotingHist) -> int:
-    return min(dist(x[:-2], v) for v in votings_hists)
-
-
-def to_int(x):
+def __to_int(x):
     return np.round_(x).astype(np.int32)
 
 
-def basing_hopping(votings_hists: list[VotingHist], N: int, niter: int = 1000, step_size: int = None, seed: Optional[int] = None) -> VotingHist:
+def basing_hopping(approvalwise_vectors: list[VotingHist], num_voters: int, niter: int = 1000, step_size: int = 1, seed: Optional[int] = None, big_step_chance: float = 0.0) -> tuple[VotingHist, int]:
+    """# Summary
+    Basin hopping algorithm for finding farthest approvalwise vector.
+
+    For approvalwise vectors, unit step is defined as a difference of +1 or -1 in one coordinate, such that monotonicity is preserved.
+
+    Big step is defined as a difference of +1 or -1 on a prefix/suffix of the vector, such that monotonicity is preserved.
+
+    ## Args:
+        `approvalwise_vectors` (list[VotingHist]): list of approvalwise vectors/elections, where each approvalwise vector is a list of non decreasing integers in range [0, `num_voters`].
+        `num_voters` (int): Maximum number of voters.
+        `niter` (int, optional): Number of iterations for Basinhopping algorithm. Defaults to `1000`.
+        `step_size` (int, optional): For every iteration algorithm can make from 1 to `step_size` unit steps (at random). Defaults to `1`.
+        `seed` (Optional[int], optional): Seed of random engine. Defaults to `None`.
+        `big_step_chance` (float, optional): Chance of making a big step instead of unit steps. Defaults to `0.0`.
+
+    ## Returns:
+        -> (VotingHist, int): Farthest approvalwise vector and its distance from given approvalwise vectors.
+
+    ## Examples
+    """
+    approvalwise_vectors = np.array(approvalwise_vectors)
     rng = np.random.default_rng(seed)
-    M = len(votings_hists[0])
-    R = len(votings_hists)
-    # x0 = np.sort(rng.integers(0, N, endpoint=True, size=M+2))
-    x0 = np.array([N//2] * (M + 2))
-    x0[-1] = N
-    x0[M] = 0
-    step_size = step_size or round(math.pow(N * M * R, 1/3))
+    num_elections, num_candidates = approvalwise_vectors.shape
+
+    x0 = np.array([num_voters//2] * (num_candidates + 2))
+    x0[-1] = num_voters
+    x0[num_candidates] = 0
 
     def f(x):
-        nonlocal votings_hists
-        x = to_int(x)
-        d = -distance_across(votings_hists, x)
+        nonlocal approvalwise_vectors
+        x = __to_int(x)
+        d = -__distance_across(approvalwise_vectors, x)
         return d
 
     def step_function(x):
         nonlocal rng
-        x = to_int(x)
+        x = __to_int(x)
         steps = rng.integers(1, step_size + 1)
+
+        if rng.random() < big_step_chance:
+            while True:
+                idx = rng.integers(0, num_candidates)
+                dx = rng.choice([-1, 1])
+                if dx > 0 and x[idx - 1] >= x[idx] + dx:
+                    x[idx:] += dx
+                    break
+                elif dx < 0 and x[idx] + dx >= x[idx + 1]:
+                    x[:idx + 1] += dx
+                    break
+            return x
+
         for _ in range(steps):
             while True:
-                idx = rng.integers(0, M)
+                idx = rng.integers(0, num_candidates)
                 dx = rng.choice([-1, 1])
                 if x[idx - 1] >= x[idx] + dx >= x[idx + 1]:
                     x[idx] += dx
@@ -57,9 +80,8 @@ def basing_hopping(votings_hists: list[VotingHist], N: int, niter: int = 1000, s
 
     res = basinhopping(f, x0, niter=niter,
                        take_step=step_function, seed=seed)
-    x = np.round_(res.x[:-2]).astype(np.int32)
-    # print(f'{f_time:.2f} sec, {time.time() - start_time:.2f} sec')
-    return list(x), -int(res.fun)
+    x = __to_int(res.x[:-2])
+    return np.array(x, dtype=int), -int(res.fun)
 
 
 if __name__ == '__main__':
@@ -70,20 +92,26 @@ if __name__ == '__main__':
     parser.add_argument('N', type=int, help='Number of voters')
     parser.add_argument('M', type=int, help='Number of candidates')
     parser.add_argument('R', type=int, help='Number of new votings to yield')
+    parser.add_argument('niter', type=int, help='Number of iterations')
+    parser.add_argument('big_step_chance', type=float,
+                        help='Chance of big step')
 
     args = parser.parse_args()
 
-    N = args.N
-    M = args.M
-    R = args.R
-    votings_hists = [np.array([0] * M), np.array([N] * M)]
+    num_voters = args.N
+    num_candidates = args.M
+    num_elections = args.R
+    niter = args.niter or num_voters*num_candidates*10
+    big_step_chance = args.big_step_chance or 0.0
+    approvalwise_vectors = [
+        np.array([0] * num_candidates), np.array([num_voters] * num_candidates)]
 
     print('r,dist,dist_prop,time')
-    step_size = round(math.sqrt(N))
-    for i in range(3, R + 3):
+    step_size = round(math.sqrt(num_voters))
+    for i in range(3, num_elections + 3):
         start = time.time()
         x, score = basing_hopping(
-            votings_hists, N, niter=N*M*10, step_size=step_size)
+            approvalwise_vectors, num_voters, niter=niter, step_size=step_size, big_step_chance=big_step_chance)
         dt = time.time() - start
-        print(f'{i},{score},{score/(N*M):.4f},{dt:.4f}')
-        votings_hists.append(x)
+        print(f'{i},{score},{score/(num_voters*num_candidates):.4f},{dt:.4f}')
+        approvalwise_vectors.append(x)
