@@ -16,8 +16,13 @@ def gurobi_ilp(approvalwise_vectors: list[ApprovalwiseVector], num_voters: int, 
     """# Summary
     Generates farthest approvalwise vector from the given approvalwise vectors.
 
+    Number of gurobi variables: `num_candidates` + 2 * `num_elections` * `num_candidates` + `num_elections`
+
+    Number of gurobi constraints: `num_candidates` + 2 * `num_elections` * `num_candidates` + `num_elections` + 2
+
     ## Args:
-        `approvalwise_vectors` (list[ApprovalwiseVector]): List of approvalwise vectors/elections, where each approvalwise vector is a list of non decreasing integers in range [0, `num_voters`].
+        `approvalwise_vectors` (list[ApprovalwiseVector]): List of approvalwise vectors/elections, where each approvalwise vector is a list of non 
+        decreasing integers in range [0, `num_voters`].
 
         `num_voters` (int): The maximum number of possible votes.
 
