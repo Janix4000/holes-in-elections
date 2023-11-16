@@ -68,7 +68,7 @@ def generate_farthest_elections_l1_approvalwise(
     num_generated: int,
     generator: Callable[[list[np.ndarray], int], tuple[np.ndarray, int]],
     family_id: str,
-    save_snapshots: bool = False,
+    save_snapshots: str | None = None,
 ):
     meaningful_elections = get_meaningful_elections_from_experiment(experiment)
     approvalwise_vectors = get_approvalwise_vectors(meaningful_elections)
@@ -85,10 +85,6 @@ def generate_farthest_elections_l1_approvalwise(
     sample_election = next(iter(experiment.elections.values()))
     num_voters = sample_election.num_voters
 
-    family_dirpath = os.path.join('results', 'gurobi', family_id)
-    if not os.path.exists(family_dirpath):
-        os.makedirs(family_dirpath)
-
     for idx in tqdm(range(num_generated)):
         start = time.time()
         approvalwise_vector, distance = generator(
@@ -99,9 +95,9 @@ def generate_farthest_elections_l1_approvalwise(
         approvalwise_vectors.append(approvalwise_vector)
         new_distances.append(distance)
 
-        if save_snapshots:
+        if save_snapshots is not None:
             snapshot_filepath = os.path.join(
-                family_dirpath, 'new-approvalwise-vectors.pkl')
+                save_snapshots, 'new-approvalwise-vectors.pkl')
             with open(snapshot_filepath, 'wb') as f:
                 pickle.dump(new_approvalwise_vectors, f)
             print(f'Snapshot {idx} saved to {snapshot_filepath}')
