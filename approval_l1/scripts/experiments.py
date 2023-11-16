@@ -7,7 +7,7 @@ import time
 
 import mapel.elections as mapel
 from scripts.approvalwise_vector import get_approvalwise_vectors, sample_election_from_approvalwise_vector
-from tqdm.notebook import tqdm
+from tqdm import tqdm
 import os
 import pickle
 
@@ -75,17 +75,17 @@ def generate_farthest_elections_l1_approvalwise(
     new_approvalwise_vectors = {}
     new_distances = []
     execution_times = []
+    current_experiment_size = len(experiment.elections)
     experiment_sizes = list(
         range(current_experiment_size, current_experiment_size + num_generated))
 
     family_id = f'NFE-{family_id}'
     experiment.add_empty_family(family_id=family_id, color='orange')
 
-    current_experiment_size = len(experiment.elections)
     sample_election = next(iter(experiment.elections.values()))
     num_voters = sample_election.num_voters
 
-    for idx in tqdm(range(num_generated)):
+    for idx in tqdm(range(num_generated), desc='Finding farthest elections'):
         start = time.time()
         approvalwise_vector, distance = generator(
             approvalwise_vectors, num_voters)

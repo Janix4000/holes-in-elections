@@ -25,7 +25,6 @@ def run_experiment(experiment_id: str):
         embedding_id="fr"
     )
     experiment.prepare_elections()
-    experiment.print_map_2d()
 
     family_dirpath = os.path.join('results', 'gurobi', experiment_id)
     if not os.path.exists(family_dirpath):
