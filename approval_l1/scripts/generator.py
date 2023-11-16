@@ -43,7 +43,7 @@ if __name__ == '__main__':
     for i in range(R_Init + 1, R + R_Init + 1):
         start = time.time()
         if args.algorithm == 'bh':
-            x, dist = bh.basing_hopping(
+            x, dist = bh.basin_hopping(
                 votings_hists, N, niter=N*M*2, seed=2137)
         elif args.algorithm == 'gurobi':
             x, dist = gurobi.gurobi_ilp(votings_hists, N)
