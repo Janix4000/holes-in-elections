@@ -2,6 +2,7 @@ import os
 import pickle
 import matplotlib.pyplot as plt
 import mapel.elections as mapel
+from scripts.approvalwise_vector import get_approvalwise_vectors
 from scripts.gurobi import gurobi_ilp
 import scripts.experiments as experiments
 
@@ -30,13 +31,19 @@ def run_experiment(experiment_id: str):
     if not os.path.exists(family_dirpath):
         os.makedirs(family_dirpath)
 
+    meaningful_elections = experiments.get_meaningful_elections_from_experiment(
+        experiment)
+    approvalwise_vectors = get_approvalwise_vectors(meaningful_elections)
+    sample_election = next(iter(experiment.elections.values()))
+    num_voters = sample_election.num_voters
+
     _new_approvalwise_vectors, report = experiments.generate_farthest_elections_l1_approvalwise(
-        experiment, num_generated, generator, experiment_id, save_snapshots=family_dirpath)
+        approvalwise_vectors, num_voters, num_generated, generator, experiment_id, save_snapshots=family_dirpath)
 
     with open(os.path.join(family_dirpath, 'report.pkl'), 'wb') as f:
         pickle.dump(report, f)
 
 
-run_experiment('euclidean')
+# run_experiment('euclidean')
 run_experiment('truncated_urn')
 run_experiment('noise')

@@ -64,26 +64,21 @@ def show_2d_map_with_compass(experiment: mapel.ApprovalElectionExperiment, with_
 
 
 def generate_farthest_elections_l1_approvalwise(
-    experiment: mapel.ApprovalElection,
+    approvalwise_vectors: list[np.ndarray],
+    num_voters: int,
     num_generated: int,
     generator: Callable[[list[np.ndarray], int], tuple[np.ndarray, int]],
     family_id: str,
     save_snapshots: str | None = None,
 ):
-    meaningful_elections = get_meaningful_elections_from_experiment(experiment)
-    approvalwise_vectors = get_approvalwise_vectors(meaningful_elections)
     new_approvalwise_vectors = {}
     new_distances = []
     execution_times = []
-    current_experiment_size = len(experiment.elections)
+    current_experiment_size = len(approvalwise_vectors)
     experiment_sizes = list(
         range(current_experiment_size, current_experiment_size + num_generated))
 
     family_id = f'NFE-{family_id}'
-    experiment.add_empty_family(family_id=family_id, color='orange')
-
-    sample_election = next(iter(experiment.elections.values()))
-    num_voters = sample_election.num_voters
 
     for idx in tqdm(range(num_generated), desc='Finding farthest elections'):
         start = time.time()
