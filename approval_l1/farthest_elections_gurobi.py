@@ -18,6 +18,8 @@ num_voters = 100
 
 
 def run_experiment(experiment_id: str):
+    global generator, num_generated, num_candidates, num_voters
+
     experiment_id = f'{num_candidates}x{num_voters}/{experiment_id}'
 
     experiment = mapel.prepare_offline_approval_experiment(
@@ -34,8 +36,6 @@ def run_experiment(experiment_id: str):
     meaningful_elections = experiments.get_meaningful_elections_from_experiment(
         experiment)
     approvalwise_vectors = get_approvalwise_vectors(meaningful_elections)
-    sample_election = next(iter(experiment.elections.values()))
-    num_voters = sample_election.num_voters
 
     _new_approvalwise_vectors, report = experiments.generate_farthest_elections_l1_approvalwise(
         approvalwise_vectors, num_voters, num_generated, generator, experiment_id, save_snapshots=family_dirpath)
@@ -44,6 +44,4 @@ def run_experiment(experiment_id: str):
         pickle.dump(report, f)
 
 
-# run_experiment('euclidean')
-run_experiment('truncated_urn')
-run_experiment('noise')
+run_experiment('euclidean')
