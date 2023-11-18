@@ -7,6 +7,7 @@
 #include <nlohmann/json.hpp>
 #include <vector>
 
+#include "approvalwise_vector.hpp"
 #include "brute.hpp"
 #include "greedy_dp.hpp"
 
@@ -51,11 +52,11 @@ signed main(int argc, char** argv) {
         return 1;
     }
 
-    vector<voting_hist_t> votings_hist;
+    vector<approvalwise_vector_t> votings_hist;
     if (vm.count("load-hists")) {
         std::ifstream ifs(vm["load-hists"].as<std::string>());
         json jsonData = json::parse(ifs);
-        votings_hist = jsonData.get<vector<voting_hist_t>>();
+        votings_hist = jsonData.get<vector<approvalwise_vector_t>>();
     } else {
         votings_hist = {vi(M, N), vi(M, 0)};
     }
@@ -74,14 +75,14 @@ signed main(int argc, char** argv) {
 
     for (int i = 0; i < R; i++) {
         auto start_time = chrono::high_resolution_clock::now();
-        std::pair<voting_hist_t, int> res;
+        std::pair<approvalwise_vector_t, int> res;
         if (algorithm == "brute") {
-            res = brute::next_voting_hist(votings_hist, N);
+            res = brute::farthest_approvalwise_vector(votings_hist, N);
         } else if (algorithm == "greedy_dp") {
-            res = greedy_dp::next_voting_hist(votings_hist, N);
+            res = greedy_dp::farthest_approvalwise_vector(votings_hist, N);
         }
         auto [next_voting_hist, score] =
-            brute::next_voting_hist(votings_hist, N);
+            brute::farthest_approvalwise_vector(votings_hist, N);
 
         auto end_time = chrono::high_resolution_clock::now();
         auto elapsed_time =

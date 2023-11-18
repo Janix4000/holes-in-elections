@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Iterable
 import mapel.elections as mapel
 import numpy as np
 
@@ -37,3 +37,18 @@ def add_sampled_elections_to_experiment(approvalwise_vectors: dir, experiment: m
             approvalwise_vector, num_voters)
         election.instance_id = instance_id
         experiment.add_election_to_family(election, family_id=family_id)
+
+
+def dump_to_text_file(approvalwise_vectors: dict[str, np.ndarray] | Iterable[np.ndarray], num_voters: int, file) -> None:
+    sample_election_from_approvalwise_vector = next(
+        iter(approvalwise_vectors.values() if isinstance(approvalwise_vectors, dict) else approvalwise_vectors))
+    num_candidates = len(sample_election_from_approvalwise_vector)
+    num_elections = len(approvalwise_vectors)
+    file.write(f'{num_elections} {num_voters} {num_candidates}\n')
+
+    iterator = approvalwise_vectors.items() if isinstance(
+        approvalwise_vectors, dict) else enumerate(approvalwise_vectors)
+
+    for instance_id, approvalwise_vector in iterator:
+        stringified_vector = [str(int(x)) for x in approvalwise_vector]
+        file.write(f'{instance_id} {" ".join(stringified_vector)}\n')

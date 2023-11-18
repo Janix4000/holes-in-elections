@@ -9,6 +9,8 @@
 #include <nlohmann/json.hpp>
 #include <vector>
 
+#include "approvalwise_vector.hpp"
+
 using json = nlohmann::json;
 namespace po = boost::program_options;
 
@@ -42,11 +44,11 @@ signed main(int argc, char** argv) {
     const int verbose = vm["verbose"].as<int>();
     const bool json_output = vm["json"].as<bool>();
 
-    vector<voting_hist_t> votings_hist;
+    vector<approvalwise_vector_t> votings_hist;
     if (vm.count("load-hists")) {
         std::ifstream ifs(vm["load-hists"].as<std::string>());
         json jsonData = json::parse(ifs);
-        votings_hist = jsonData.get<vector<voting_hist_t>>();
+        votings_hist = jsonData.get<vector<approvalwise_vector_t>>();
     } else {
         votings_hist = {vi(M, N), vi(M, 0)};
     }
@@ -57,7 +59,8 @@ signed main(int argc, char** argv) {
 
     for (int i = 0; i < R; i++) {
         auto start_time = chrono::high_resolution_clock::now();
-        auto [res, score] = brute::next_voting_hist(votings_hist, N);
+        auto [res, score] =
+            brute::farthest_approvalwise_vector(votings_hist, N);
         auto end_time = chrono::high_resolution_clock::now();
         auto elapsed_time =
             chrono::duration_cast<chrono::milliseconds>(end_time - start_time)

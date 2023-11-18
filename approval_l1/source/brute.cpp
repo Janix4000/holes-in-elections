@@ -1,7 +1,5 @@
-#pragma once
-
+#include "approvalwise_vector.hpp"
 #include "definitions.hpp"
-#include "utils.hpp"
 
 namespace brute {
 
@@ -29,8 +27,8 @@ struct Cell {
 
 void remove_non_maximal(vector<Node>& nodes) {}
 
-pair<voting_hist_t, int> next_voting_hist(
-    const vector<voting_hist_t>& votings_hist, const int N) {
+pair<approvalwise_vector_t, int> farthest_approvalwise_vector(
+    const vector<approvalwise_vector_t>& votings_hist, const int N) {
     const int R = votings_hist.size();
     const int M = votings_hist.front().size();
 
@@ -109,7 +107,7 @@ pair<voting_hist_t, int> next_voting_hist(
     auto max_el = max_element(
         all(backs_maxs),
         [](const auto& l, const auto& r) { return l.min_dist < r.min_dist; });
-    voting_hist_t res(M);
+    approvalwise_vector_t res(M);
     int y = max_el - backs_maxs.begin();
     Node node = *max_el;
 
