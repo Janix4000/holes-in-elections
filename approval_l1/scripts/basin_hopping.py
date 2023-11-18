@@ -7,7 +7,19 @@ import argparse
 import mapel.elections as mapel
 from scripts.approvalwise_vector import get_approvalwise_vector
 
-VotingHist = np.ndarray
+ApprovalwiseVector = np.ndarray
+
+
+def find_best_starting_step_vector(approvalwise_vectors: list[ApprovalwiseVector], num_voters: int, first_candidates: list[ApprovalwiseVector] | None = None) -> ApprovalwiseVector:
+    first_candidates = first_candidates or []
+    num_candidates = len(approvalwise_vectors[0])
+    candidates = np.ones((num_candidates + 1, num_candidates)) * num_voters
+    for i in range(num_candidates):
+        candidates[i, i:] = 0
+    candidates = list(candidates) + first_candidates
+    distances = np.array(
+        [__distance_across(approvalwise_vectors, x) for x in candidates])
+    return candidates[distances.argmax()]
 
 
 def sample_approvalwise_vector(num_voters: int, num_candidates: int, rng):
@@ -21,8 +33,8 @@ def sample_approvalwise_vector(num_voters: int, num_candidates: int, rng):
     return get_approvalwise_vector(election)
 
 
-def __distance_across(approvalwise_vectors: np.ndarray, x: VotingHist) -> int:
-    return np.sum(np.abs(approvalwise_vectors - x[:-2]), axis=1).min()
+def __distance_across(approvalwise_vectors: np.ndarray, x: ApprovalwiseVector) -> int:
+    return np.sum(np.abs(approvalwise_vectors - x), axis=1).min()
 
 
 def __to_int(x):
@@ -30,14 +42,14 @@ def __to_int(x):
 
 
 def basin_hopping(
-    approvalwise_vectors: list[VotingHist],
+    approvalwise_vectors: list[ApprovalwiseVector],
     num_voters: int,
     niter: int = 1000,
     step_size: int = 1,
     seed: Optional[int] = None,
     big_step_chance: float = 0.0,
-    x0: str | VotingHist = 'random'
-) -> tuple[VotingHist, int]:
+    x0: str | ApprovalwiseVector = 'random'
+) -> tuple[ApprovalwiseVector, int]:
     """# Summary
     Basin hopping algorithm for finding farthest approvalwise vector.
 
@@ -67,17 +79,19 @@ def basin_hopping(
         case 'random':
             x0 = rng.integers(0, num_voters, size=num_candidates)
             x0[::-1].sort()
-            x0 = np.concatenate([x0, np.array([0, num_voters])])
         case 'random_resampling':
             x0 = sample_approvalwise_vector(num_voters, num_candidates, rng)
-            x0 = np.concatenate([x0, np.array([0, num_voters])])
+        case 'step_vector':
+            x0 = find_best_starting_step_vector(
+                approvalwise_vectors, num_voters)
         case _:
             x0 = np.array(x0)
+    x0 = np.concatenate([x0, np.array([0, num_voters])])
 
     def f(x):
         nonlocal approvalwise_vectors
         x = __to_int(x)
-        d = -__distance_across(approvalwise_vectors, x)
+        d = -__distance_across(approvalwise_vectors, x[:-2])
         return d
 
     def unit_step(x):
