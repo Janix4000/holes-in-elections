@@ -52,3 +52,19 @@ def dump_to_text_file(approvalwise_vectors: dict[str, np.ndarray] | Iterable[np.
     for instance_id, approvalwise_vector in iterator:
         stringified_vector = [str(int(x)) for x in approvalwise_vector]
         file.write(f'{instance_id} {" ".join(stringified_vector)}\n')
+
+
+def load_from_text_file(file) -> tuple[dict[str, np.ndarray], int]:
+    header = file.readline().strip().split()
+    num_elections = int(header[0])
+    num_voters = int(header[1])
+    _num_candidates = int(header[2])
+
+    approvalwise_vectors = {}
+    for _ in range(num_elections):
+        line = file.readline().strip().split()
+        instance_id = line[0]
+        vector = np.array([int(x) for x in line[1:]])
+        approvalwise_vectors[instance_id] = vector
+
+    return approvalwise_vectors, num_voters
