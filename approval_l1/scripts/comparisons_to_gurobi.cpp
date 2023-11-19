@@ -1,14 +1,16 @@
 #include <fstream>
+#include <functional>
 #include <iostream>
 
 #include "approvalwise_vector.hpp"
 #include "definitions.hpp"
 #include "greedy_dp.hpp"
+#include "pairs.hpp"
 
 int main(int argc, char **argv) {
-    if (argc != 3) {
+    if (argc < 3) {
         std::cerr << "Usage: " << argv[0]
-                  << " <input_file> <reference_input_file> \n";
+                  << " <input_file> <reference_input_file> [algorithm]\n";
         return 1;
     }
     std::ifstream in(argv[1]);
@@ -20,6 +22,24 @@ int main(int argc, char **argv) {
     auto [reference_approvalwise_vectors, _num_voters] =
         load_approvalwise_vectors(in_ref);
     size_t num_elections_reference = reference_approvalwise_vectors.size();
+
+    std::function<std::pair<approvalwise_vector_t, int>(
+        const std::vector<approvalwise_vector_t> &, const int)>
+        algorithm;
+
+    if (argc == 4) {
+        std::string algorithm_name = argv[4 - 1];
+        if (algorithm_name == "greedy_dp") {
+            algorithm = greedy_dp::farthest_approvalwise_vector;
+        } else if (algorithm_name == "pairs") {
+            algorithm = pairs::farthest_approvalwise_vector;
+        } else {
+            std::cerr << "Unknown algorithm: " << algorithm_name << "\n";
+            return 1;
+        }
+    } else {
+        algorithm = greedy_dp::farthest_approvalwise_vector;
+    }
 
     std::cout << num_elections_reference << "\n";
     for (int num_starting_elections = 0;
@@ -35,8 +55,7 @@ int main(int argc, char **argv) {
         for (size_t idx = 0;
              idx < num_elections_reference - num_starting_elections; idx++) {
             auto [farthest_approvalwise_vectors, distance] =
-                greedy_dp::farthest_approvalwise_vector(
-                    starting_approvalwise_vectors, num_voters);
+                algorithm(starting_approvalwise_vectors, num_voters);
             std::cout << distance << " ";
             starting_approvalwise_vectors.push_back(
                 farthest_approvalwise_vectors);
