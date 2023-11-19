@@ -91,7 +91,7 @@ def generate_farthest_elections_l1_approvalwise(
         new_distances.append(distance)
 
         report = pd.DataFrame({
-            'experiment_size': experiment_sizes,
+            'experiment_size': experiment_sizes[:idx + 1],
             'execution_time': execution_times,
             'distance': new_distances
         })
