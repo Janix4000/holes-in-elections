@@ -44,7 +44,7 @@ def __to_int(x):
 def basin_hopping(
     approvalwise_vectors: list[ApprovalwiseVector],
     num_voters: int,
-    niter: int = 1000,
+    niter: int | None = None,
     step_size: int = 1,
     seed: Optional[int] = None,
     big_step_chance: float = 0.0,
@@ -60,7 +60,7 @@ def basin_hopping(
     ## Args:
         `approvalwise_vectors` (list[VotingHist]): list of approvalwise vectors/elections, where each approvalwise vector is a list of non decreasing integers in range [0, `num_voters`].
         `num_voters` (int): Maximum number of voters.
-        `niter` (int, optional): Number of iterations for Basinhopping algorithm. Defaults to `1000`.
+        `niter` (int, optional): Number of iterations for Basinhopping algorithm. Defaults to at least `1000`.
         `step_size` (int, optional): For every iteration algorithm can make from 1 to `step_size` unit steps (at random). Defaults to `1`.
         `seed` (Optional[int], optional): Seed of random engine. Defaults to `None`.
         `big_step_chance` (float, optional): Chance of making a big step instead of unit steps. Defaults to `0.0`.
@@ -72,8 +72,14 @@ def basin_hopping(
     ## Examples
     """
     approvalwise_vectors = np.array(approvalwise_vectors)
-    rng = np.random.default_rng(seed)
     num_elections, num_candidates = approvalwise_vectors.shape
+    if niter is None:
+        niter = num_candidates * num_voters / \
+            (2 * 0.05 * (step_size / 2 * (1 - big_step_chance) +
+             num_candidates * big_step_chance))
+        niter = max(round(niter), 1000)
+
+    rng = np.random.default_rng(seed)
 
     match x0:
         case 'random':
