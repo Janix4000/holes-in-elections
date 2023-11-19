@@ -90,11 +90,18 @@ def generate_farthest_elections_l1_approvalwise(
         approvalwise_vectors.append(approvalwise_vector)
         new_distances.append(distance)
 
+        report = pd.DataFrame({
+            'experiment_size': experiment_sizes,
+            'execution_time': execution_times,
+            'distance': new_distances
+        })
+
         if save_snapshots is not None:
             snapshot_filepath = os.path.join(
                 save_snapshots, 'new-approvalwise-vectors.pkl')
             with open(snapshot_filepath, 'wb') as f:
                 pickle.dump(new_approvalwise_vectors, f)
+            report.to_csv(os.path.join(save_snapshots, 'report.csv'))
             print(f'Snapshot {idx} saved to {snapshot_filepath}')
 
     report = pd.DataFrame({
