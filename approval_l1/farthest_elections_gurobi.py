@@ -13,32 +13,33 @@ new_approval_vectors_per_experiment = {}
 
 
 generator = gurobi_ilp
-num_generated = 36
+num_instances = 36
 num_candidates = 30
 num_voters = 100
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--num_generated', type=int,
-                    help='The number of elections to generate')
+parser.add_argument('--num_instances', type=int,
+                    help='The number of elections to generate', default=36)
 parser.add_argument('--num_candidates', type=int,
-                    help='The number of candidates')
-parser.add_argument('--num_voters', type=int, help='The number of voters')
-parser.add_argument('--family', type=int,
-                    help='The family of elections to generate')
+                    help='The number of candidates', default=30)
+parser.add_argument('--num_voters', type=int,
+                    help='The number of voters', default=100)
+parser.add_argument('--family', type=str,
+                    help='The family of elections to generate', default='euclidean')
 parser.add_argument('--load_pickle', type=bool,
-                    help='Whether to load experiment from the pickle file')
+                    help='Whether to load experiment from the pickle file', default=True)
 
 args = parser.parse_args()
 
-num_generated = args.num_generated or num_generated
-num_candidates = args.num_candidates or num_candidates
-num_voters = args.num_voters or num_voters
-family_id = args.family or 'euclidean'
-load_pickle = args.load_pickle or False
+num_instances = args.num_instances
+num_candidates = args.num_candidates
+num_voters = args.num_voters
+family_id = args.family
+load_pickle = args.load_pickle
 
 
 def run_experiment(experiment_id: str):
-    global generator, num_generated, num_candidates, num_voters, load_pickle
+    global generator, num_instances, num_candidates, num_voters, load_pickle
 
     experiment_id = f'{num_candidates}x{num_voters}/{experiment_id}'
 
@@ -62,7 +63,7 @@ def run_experiment(experiment_id: str):
     approvalwise_vectors = get_approvalwise_vectors(meaningful_elections)
 
     _new_approvalwise_vectors, report = experiments.generate_farthest_elections_l1_approvalwise(
-        approvalwise_vectors, num_voters, num_generated, generator, experiment_id, save_snapshots=family_dirpath)
+        approvalwise_vectors, num_voters, num_instances, generator, experiment_id, save_snapshots=family_dirpath)
 
     report.to_csv(os.path.join(family_dirpath, 'report.csv'))
 

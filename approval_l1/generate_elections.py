@@ -8,19 +8,23 @@ import numpy as np
 parser = argparse.ArgumentParser()
 
 # Add command line arguments
-parser.add_argument('--num_candidates', type=int, help='Number of candidates')
-parser.add_argument('--num_voters', type=int, help='Number of voters')
-parser.add_argument('--num_instances', type=int, help='Number of voters')
-parser.add_argument('--family_id', type=str, help='Family ID')
+parser.add_argument('--num_candidates', type=int,
+                    help='Number of candidates', default=30)
+parser.add_argument('--num_voters', type=int,
+                    help='Number of voters', default=100)
+parser.add_argument('--num_instances', type=int,
+                    help='Number of elections to generate', default=36)
+parser.add_argument('--family_id', type=str,
+                    help='Family ID', default='euclidean')
 
 # Parse the command line arguments
 args = parser.parse_args()
 
 # Get the values from the command line arguments
-num_candidates = args.num_candidates or 30
-num_voters = args.num_voters or 100
-num_instances = args.num_instances or 36
-family_id = args.family_id or "euclidean"
+num_candidates = args.num_candidates
+num_voters = args.num_voters
+num_instances = args.num_instances
+family_id = args.family_id
 
 size_id = f'{num_candidates}x{num_voters}'
 
