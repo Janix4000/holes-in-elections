@@ -102,5 +102,5 @@ match family_id:
 experiment.compute_distances(distance_id='l1-approvalwise')
 experiment.embed_2d(embedding_id="fr")
 
-with open(os.path.join(experiments_path, 'elections.pickle'), 'wb') as file:
+with open(os.path.join(experiments_path, 'elections.pkl'), 'wb') as file:
     pickle.dump(experiment.elections, file)
