@@ -67,8 +67,8 @@ match family_id:
     case "resampling" | "noise":
         experiment.add_empty_family(culture_id=family_id, num_candidates=num_candidates,
                                     num_voters=num_voters, family_id=family_id, color='green')
-        t = np.round(np.sqrt(num_instances))
-        k = num_instances / t
+        t = int(np.round(np.sqrt(num_instances)))
+        k = num_instances // t
         for p in np.linspace(0, 1, t):
             for phi in np.linspace(0, 1, k):
                 election = mapel.generate_approval_election(
@@ -84,8 +84,8 @@ match family_id:
     case "truncated_urn":
         experiment.add_empty_family(culture_id=family_id, num_candidates=num_candidates,
                                     num_voters=num_voters, family_id=family_id, color='green')
-        t = np.round(np.sqrt(num_instances))
-        k = num_instances / t
+        t = int(np.round(np.sqrt(num_instances)))
+        k = num_instances // t
         for p in np.linspace(0, 1, t):
             for alpha in np.linspace(0, 1, k):
                 election = mapel.generate_approval_election(
