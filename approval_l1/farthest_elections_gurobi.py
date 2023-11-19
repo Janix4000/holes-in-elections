@@ -42,22 +42,23 @@ def run_experiment(experiment_id: str):
 
     experiment_id = f'{num_candidates}x{num_voters}/{experiment_id}'
 
-    experiment = mapel.prepare_offline_approval_experiment(
-        experiment_id=experiment_id,
-        distance_id="l1-approvalwise",
-        embedding_id="fr"
-    )
     if load_pickle:
-        with open(os.path.join('experiments', experiment_id, 'experiment.pkl'), 'rb') as f:
-            experiment = pickle.load(f)
-    experiment.prepare_elections()
+        with open(os.path.join('experiments', experiment_id, 'elections.pkl'), 'rb') as f:
+            elections = pickle.load(f)
+    else:
+        experiment = mapel.prepare_offline_approval_experiment(
+            experiment_id=experiment_id,
+            distance_id="l1-approvalwise",
+            embedding_id="fr"
+        )
+        experiment.prepare_elections()
+        elections = experiment.elections
 
     family_dirpath = os.path.join('results', 'gurobi', experiment_id)
     if not os.path.exists(family_dirpath):
         os.makedirs(family_dirpath)
 
-    meaningful_elections = experiments.get_meaningful_elections_from_experiment(
-        experiment)
+    meaningful_elections = experiments.get_meaningful_elections(elections)
     approvalwise_vectors = get_approvalwise_vectors(meaningful_elections)
 
     _new_approvalwise_vectors, report = experiments.generate_farthest_elections_l1_approvalwise(

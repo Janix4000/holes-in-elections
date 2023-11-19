@@ -123,7 +123,6 @@ def plot_report(report: pd.DataFrame):
     plt.show()
 
 
-def get_meaningful_elections_from_experiment(experiment):
+def get_meaningful_elections(elections: dict[str, mapel.ApprovalElection]):
     to_purge_regex = '|'.join(to_purge_elections_ids_regexes)
-    elections = experiment.elections
     return {instance_id: election for instance_id, election in elections.items() if not re.match(to_purge_regex, instance_id)}
