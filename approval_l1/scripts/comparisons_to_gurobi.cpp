@@ -41,7 +41,9 @@ int main(int argc, char **argv) {
         algorithm = greedy_dp::farthest_approvalwise_vector;
     }
 
-    std::cout << num_elections_reference << "\n";
+    std::cout
+        << "experiment_size,distance,execution_time,num_starting_elections"
+        << std::endl;
     for (int num_starting_elections = 0;
          num_starting_elections < num_elections_reference;
          num_starting_elections++) {
@@ -51,16 +53,23 @@ int main(int argc, char **argv) {
             starting_approvalwise_vectors.push_back(
                 reference_approvalwise_vectors[i]);
         }
-        std::cout << num_elections_reference - num_starting_elections << " ";
         for (size_t idx = 0;
              idx < num_elections_reference - num_starting_elections; idx++) {
+            auto start_time = std::chrono::system_clock::now();
             auto [farthest_approvalwise_vectors, distance] =
                 algorithm(starting_approvalwise_vectors, num_voters);
-            std::cout << distance << " ";
+            float execution_time_s =
+                std::chrono::duration_cast<std::chrono::duration<float>>(
+                    std::chrono::system_clock::now() - start_time)
+                    .count();
+
+            std::cout << starting_approvalwise_vectors.size() << "," << distance
+                      << "," << execution_time_s << ","
+                      << num_starting_elections << std::endl;
+
             starting_approvalwise_vectors.push_back(
                 farthest_approvalwise_vectors);
         }
-        std::cout << endl;
     }
     return 0;
 }
