@@ -21,6 +21,23 @@ std::pair<vector<approvalwise_vector_t>, size_t> load_approvalwise_vectors(
     };
 }
 
+void save_approvalwise_vectors(std::ostream& out,
+                               const vector<approvalwise_vector_t>& vectors,
+                               const size_t num_voters) {
+    size_t num_vectors = vectors.size();
+    size_t num_candidates = vectors[0].size();
+
+    out << num_vectors << " " << num_voters << " " << num_candidates << "\n";
+    size_t idx = 0;
+    for (const auto& v : vectors) {
+        out << idx++ << " ";
+        for (const auto& val : v) {
+            out << val << " ";
+        }
+        out << "\n";
+    }
+}
+
 int dist_l1(const approvalwise_vector_t& a, const approvalwise_vector_t& b) {
     int dist = 0;
     for (size_t i = 0; i < a.size(); i++) {

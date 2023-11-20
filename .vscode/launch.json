@@ -16,14 +16,15 @@
     {
       "type": "lldb",
       "request": "launch",
-      "name": "Debug",
-      "program": "${workspaceFolder}/approval_l1/out/a.out",
+      "name": "C++ Current File",
+      "program": "${workspaceFolder}/approval_l1/build/out/${fileBasenameNoExtension}",
       "args": [
-        "16",
-        "8",
-        "5"
+        "./results/30x100/euclidean/gurobi/approvalwise-vectors.txt",
+        "./results/30x100/euclidean/gurobi/new-approvalwise-vectors.txt",
+        "pairs",
+        "./results/30x100/euclidean"
       ],
-      "cwd": "${workspaceFolder}"
+      "cwd": "${workspaceFolder}/approval_l1/"
     }
   ]
 }
