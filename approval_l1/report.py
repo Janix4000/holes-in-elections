@@ -115,15 +115,15 @@ def prepare_experiment() -> mapel.ApprovalElectionExperiment:
 def plot_maps(algorithm: str, algorithm_plots_dir, save: bool):
     experiment = prepare_experiment()
     add_sampled_elections_to_experiment(
-        approvalwise_vectors, experiment, family_id, num_voters, color='green', seed=0)
+        approvalwise_vectors, experiment, family_id, color='green', seed=0)
     if os.path.exists(os.path.join(results_dir, algorithm, 'new-approvalwise-vectors.pkl')):
         with open(os.path.join(results_dir, algorithm, 'new-approvalwise-vectors.pkl'), 'rb') as f:
             new_approvalwise_vectors = pickle.load(f)
     else:
         with open(os.path.join(results_dir, algorithm, 'new_approvalwise_vectors_0.txt'), 'r') as f:
-            new_approvalwise_vectors, _num_voters = load_from_text_file(f)
+            new_approvalwise_vectors = load_from_text_file(f)
     add_sampled_elections_to_experiment(
-        new_approvalwise_vectors, experiment, algorithm, num_voters, color='blue', seed=0)
+        new_approvalwise_vectors, experiment, algorithm, color='blue', seed=0)
     experiments.add_compass(experiment, with_grid=True)
 
     experiment.compute_distances(distance_id='l1-approvalwise')

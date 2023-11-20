@@ -5,18 +5,18 @@ from typing import Callable
 import numpy as np
 
 import scripts.approvalwise_vector as approvalwise_vector
+from scripts.approvalwise_vector import ApprovalwiseVector
+
 from scripts.basin_hopping import basin_hopping
 
-ApprovalwiseVector = np.ndarray
-
-Algorithm = Callable[[list[ApprovalwiseVector], int],
+Algorithm = Callable[[list[ApprovalwiseVector]],
                      tuple[ApprovalwiseVector, int]]
 
 
 def run_experiment(
         approvalwise_vectors: list[ApprovalwiseVector],
         reference_approvalwise_vectors: list[ApprovalwiseVector],
-        num_voters: int, algorithm: Algorithm, report_out,
+    algorithm: Algorithm, report_out,
         output_dir: str | None = None):
 
     num_elections_reference = len(reference_approvalwise_vectors)
@@ -32,7 +32,7 @@ def run_experiment(
         for idx in range(num_elections_reference - num_starting_elections):
             start_time = time.time()
             farthest_approvalwise_vectors, distance = algorithm(
-                starting_approvalwise_vectors, num_voters)
+                starting_approvalwise_vectors)
             execution_time_s = time.time() - start_time
 
             report_out.write(
@@ -44,7 +44,7 @@ def run_experiment(
         if output_dir:
             with open(os.path.join(output_dir, f"new_approvalwise_vectors_{num_starting_elections}.txt"), 'w') as out:
                 approvalwise_vector.dump_to_text_file(
-                    new_approvalwise_vectors, num_voters, out)
+                    new_approvalwise_vectors, out)
 
 
 def main():
@@ -55,14 +55,12 @@ def main():
         return 1
 
     with open(sys.argv[1], 'r') as in_file:
-        approvalwise_vectors, num_voters = approvalwise_vector.load_from_text_file(
+        approvalwise_vectors = approvalwise_vector.load_from_text_file(
             in_file)
         approvalwise_vectors = list(approvalwise_vectors.values())
-    num_candidates = len(approvalwise_vectors[0])
-    num_elections = len(approvalwise_vectors)
 
     with open(sys.argv[2], 'r') as in_ref:
-        reference_approvalwise_vectors, _num_voters = approvalwise_vector.load_from_text_file(
+        reference_approvalwise_vectors = approvalwise_vector.load_from_text_file(
             in_ref)
         reference_approvalwise_vectors = list(
             reference_approvalwise_vectors.values())
@@ -70,18 +68,16 @@ def main():
     algorithm_name = sys.argv[3]
     match algorithm_name:
         case "basin_hopping":
-            def algorithm(approvalwise_vectors, num_voters): return basin_hopping(
+            def algorithm(approvalwise_vectors): return basin_hopping(
                 approvalwise_vectors=approvalwise_vectors,
-                num_voters=num_voters,
                 step_size=7,
                 seed=2137,
                 big_step_chance=0.2,
                 x0='step_vector'
             )
         case "basin_hopping_random":
-            def algorithm(approvalwise_vectors, num_voters): return basin_hopping(
+            def algorithm(approvalwise_vectors): return basin_hopping(
                 approvalwise_vectors=approvalwise_vectors,
-                num_voters=num_voters,
                 step_size=7,
                 seed=2137,
                 big_step_chance=0.2,
@@ -96,10 +92,10 @@ def main():
         os.makedirs(output_dir, exist_ok=True)
         with open(os.path.join(output_dir, "report.csv"), 'w') as report_out:
             run_experiment(approvalwise_vectors, reference_approvalwise_vectors,
-                           num_voters, algorithm, report_out, output_dir)
+                           algorithm, report_out, output_dir)
     else:
         run_experiment(approvalwise_vectors, reference_approvalwise_vectors,
-                       num_voters, algorithm, sys.stdout)
+                       algorithm, sys.stdout)
 
 
 if __name__ == "__main__":

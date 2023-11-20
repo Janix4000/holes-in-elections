@@ -1,6 +1,8 @@
 import argparse
 import time
 
+from approval_l1.scripts.approvalwise_vector import ApprovalwiseVector
+
 try:
     import gurobipy as gp
     from gurobipy import GRB
@@ -9,10 +11,8 @@ except ImportError:
         "Failed to import Gurobi, please make sure that you have Gurobi installed"
     )
 
-ApprovalwiseVector = list[int]
 
-
-def gurobi_ilp(approvalwise_vectors: list[ApprovalwiseVector], num_voters: int, max_dist: int = None) -> tuple[ApprovalwiseVector, int]:
+def gurobi_ilp(approvalwise_vectors: list[ApprovalwiseVector], max_dist: int = None) -> tuple[ApprovalwiseVector, int]:
     """# Summary
     Generates farthest approvalwise vector from the given approvalwise vectors.
 
@@ -24,8 +24,6 @@ def gurobi_ilp(approvalwise_vectors: list[ApprovalwiseVector], num_voters: int, 
         `approvalwise_vectors` (list[ApprovalwiseVector]): List of approvalwise vectors/elections, where each approvalwise vector is a list of non 
         decreasing integers in range [0, `num_voters`].
 
-        `num_voters` (int): The maximum number of possible votes.
-
         `max_dist` (int, optional): Maximum possible distance that can be obtained. Usually set to the previous farthest distance. Defaults to `None`.
 
     ## Returns:
@@ -35,6 +33,7 @@ def gurobi_ilp(approvalwise_vectors: list[ApprovalwiseVector], num_voters: int, 
     """
     num_candidates = len(approvalwise_vectors[0])
     num_elections = len(approvalwise_vectors)
+    num_voters = approvalwise_vectors[0].num_voters
     max_dist = max_dist or num_voters * num_candidates
 
     env = gp.Env(empty=True)
@@ -73,10 +72,10 @@ def gurobi_ilp(approvalwise_vectors: list[ApprovalwiseVector], num_voters: int, 
 
     model.optimize()
 
-    votings_hist = [int(fav[i].X) for i in range(num_candidates)]
+    vector = [int(fav[i].X) for i in range(num_candidates)]
     dist = int(min_constr.X)
 
-    return votings_hist, dist
+    return ApprovalwiseVector(vector, num_voters), dist
 
 
 if __name__ == '__main__':
@@ -92,7 +91,9 @@ if __name__ == '__main__':
     num_voters = args.N
     num_candidates = args.M
     num_voters = args.R
-    votings_hists = [[0] * num_candidates, [num_voters] * num_candidates]
+    votings_hists = [
+        ApprovalwiseVector([0] * num_candidates, num_voters),
+        ApprovalwiseVector([num_voters] * num_candidates, num_voters)]
     max_expected_dist = num_voters * num_candidates // 2
     print('r,dist,dist_prop,time')
     for i in range(3, num_voters + 3):

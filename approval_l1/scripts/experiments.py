@@ -6,7 +6,7 @@ import re
 import time
 
 import mapel.elections as mapel
-from scripts.approvalwise_vector import get_approvalwise_vectors, sample_election_from_approvalwise_vector
+from scripts.approvalwise_vector import ApprovalwiseVector
 from tqdm import tqdm
 import os
 import pickle
@@ -64,10 +64,9 @@ def show_2d_map_with_compass(experiment: mapel.ApprovalElectionExperiment, with_
 
 
 def generate_farthest_elections_l1_approvalwise(
-    approvalwise_vectors: list[np.ndarray],
-    num_voters: int,
+    approvalwise_vectors: list[ApprovalwiseVector],
     num_generated: int,
-    generator: Callable[[list[np.ndarray], int], tuple[np.ndarray, int]],
+    generator: Callable[[list[ApprovalwiseVector]], tuple[ApprovalwiseVector, int]],
     family_id: str,
     save_snapshots: str | None = None,
 ):
@@ -83,7 +82,7 @@ def generate_farthest_elections_l1_approvalwise(
     for idx in tqdm(range(num_generated), desc='Finding farthest elections'):
         start = time.time()
         approvalwise_vector, distance = generator(
-            approvalwise_vectors, num_voters)
+            approvalwise_vectors)
         execution_times.append(time.time() - start)
 
         new_approvalwise_vectors[f'{family_id}-{idx}'] = approvalwise_vector

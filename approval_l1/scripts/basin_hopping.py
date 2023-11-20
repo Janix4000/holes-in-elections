@@ -5,14 +5,13 @@ from scipy.optimize import basinhopping
 import math
 import argparse
 import mapel.elections as mapel
-from scripts.approvalwise_vector import get_approvalwise_vector
-
-ApprovalwiseVector = np.ndarray
+from scripts.approvalwise_vector import ApprovalwiseVector, get_approvalwise_vector
 
 
-def find_best_starting_step_vector(approvalwise_vectors: list[ApprovalwiseVector], num_voters: int, first_candidates: list[ApprovalwiseVector] | None = None) -> ApprovalwiseVector:
+def find_best_starting_step_vector(approvalwise_vectors: list[ApprovalwiseVector], first_candidates: list[ApprovalwiseVector] | None = None) -> ApprovalwiseVector:
     first_candidates = first_candidates or []
-    num_candidates = len(approvalwise_vectors[0])
+    num_candidates = approvalwise_vectors[0].num_candidates
+    num_voters = approvalwise_vectors[0].num_voters
     candidates = np.ones((num_candidates + 1, num_candidates)) * num_voters
     for i in range(num_candidates):
         candidates[i, i:] = 0
@@ -43,7 +42,6 @@ def __to_int(x):
 
 def basin_hopping(
     approvalwise_vectors: list[ApprovalwiseVector],
-    num_voters: int,
     niter: int | None = None,
     step_size: int = 1,
     seed: Optional[int] = None,
@@ -59,7 +57,6 @@ def basin_hopping(
 
     ## Args:
         `approvalwise_vectors` (list[VotingHist]): list of approvalwise vectors/elections, where each approvalwise vector is a list of non decreasing integers in range [0, `num_voters`].
-        `num_voters` (int): Maximum number of voters.
         `niter` (int, optional): Number of iterations for Basinhopping algorithm. Defaults to at least `1000`.
         `step_size` (int, optional): For every iteration algorithm can make from 1 to `step_size` unit steps (at random). Defaults to `1`.
         `seed` (Optional[int], optional): Seed of random engine. Defaults to `None`.
@@ -71,6 +68,7 @@ def basin_hopping(
 
     ## Examples
     """
+    num_voters = approvalwise_vectors[0].num_voters
     approvalwise_vectors = np.array(approvalwise_vectors)
     num_elections, num_candidates = approvalwise_vectors.shape
     if niter is None:
@@ -161,7 +159,9 @@ if __name__ == '__main__':
     niter = args.niter or num_voters*num_candidates*10
     big_step_chance = args.big_step_chance or 0.0
     approvalwise_vectors = [
-        np.array([0] * num_candidates), np.array([num_voters] * num_candidates)]
+        ApprovalwiseVector([0] * num_candidates, num_voters),
+        ApprovalwiseVector([num_voters] * num_candidates, num_voters)
+    ]
 
     print('r,dist,dist_prop,time')
     step_size = round(math.sqrt(num_voters))

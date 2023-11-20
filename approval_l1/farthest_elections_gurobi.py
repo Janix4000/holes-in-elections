@@ -63,7 +63,7 @@ def run_experiment(experiment_id: str):
     approvalwise_vectors = get_approvalwise_vectors(meaningful_elections)
 
     _new_approvalwise_vectors, report = experiments.generate_farthest_elections_l1_approvalwise(
-        approvalwise_vectors, num_voters, num_instances, generator, experiment_id, save_snapshots=family_dirpath)
+        approvalwise_vectors, num_instances, generator, experiment_id, save_snapshots=family_dirpath)
 
     report.to_csv(os.path.join(family_dirpath, 'report.csv'))
 
