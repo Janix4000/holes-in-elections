@@ -65,6 +65,6 @@ def load_from_text_file(file) -> tuple[dict[str, np.ndarray], int]:
         line = file.readline().strip().split()
         instance_id = line[0]
         vector = np.array([int(x) for x in line[1:]])
-        approvalwise_vectors[instance_id] = vector
+        approvalwise_vectors[instance_id] = np.array(vector)
 
     return approvalwise_vectors, num_voters

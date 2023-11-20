@@ -11,6 +11,12 @@
       "program": "${file}",
       "console": "integratedTerminal",
       "justMyCode": true,
+      "args": [
+        "./results/30x100/euclidean/gurobi/approvalwise-vectors.txt",
+        "./results/30x100/euclidean/gurobi/new-approvalwise-vectors.txt",
+        "basin_hopping",
+        "./results/30x100/euclidean"
+      ],
       "cwd": "${workspaceFolder}/approval_l1/"
     },
     {

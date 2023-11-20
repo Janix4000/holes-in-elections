@@ -30,6 +30,7 @@ void run_experiment(
             starting_approvalwise_vectors.push_back(
                 reference_approvalwise_vectors[i]);
         }
+        std::vector<approvalwise_vector_t> new_approvalwise_vectors;
         for (size_t idx = 0;
              idx < num_elections_reference - num_starting_elections; idx++) {
             auto start_time = std::chrono::system_clock::now();
@@ -46,12 +47,13 @@ void run_experiment(
 
             starting_approvalwise_vectors.push_back(
                 farthest_approvalwise_vectors);
+            new_approvalwise_vectors.push_back(farthest_approvalwise_vectors);
         }
 
         if (output_dir.has_value()) {
             std::ofstream out(output_dir.value() + "new_approvalwise_vectors_" +
                               std::to_string(num_starting_elections) + ".txt");
-            save_approvalwise_vectors(out, starting_approvalwise_vectors,
+            save_approvalwise_vectors(out, new_approvalwise_vectors,
                                       num_voters);
         }
     }
