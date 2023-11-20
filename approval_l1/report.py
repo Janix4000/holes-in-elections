@@ -6,7 +6,7 @@ import scripts.experiments as experiments
 import os
 import numpy as np
 import pickle
-from scripts.approvalwise_vector import get_approvalwise_vectors
+from scripts.approvalwise_vector import add_sampled_elections_to_experiment, get_approvalwise_vectors, load_from_text_file, sample_election_from_approvalwise_vector
 from matplotlib import ticker
 
 plt.rcParams['figure.dpi'] = 300
@@ -100,6 +100,38 @@ with open(os.path.join('experiments', experiment_id, 'elections.pkl'), 'rb') as 
 approvalwise_vectors = get_approvalwise_vectors(meaningful_elections)
 
 
+def prepare_experiment() -> mapel.ApprovalElectionExperiment:
+    experiment = mapel.prepare_online_approval_experiment(
+        distance_id="l1-approvalwise",
+        embedding_id="fr"
+    )
+
+    experiment.set_default_num_candidates(num_candidates)
+    experiment.set_default_num_voters(num_voters)
+
+    return experiment
+
+
+def plot_maps(algorithm: str, algorithm_plots_dir, save: bool):
+    experiment = prepare_experiment()
+    add_sampled_elections_to_experiment(
+        approvalwise_vectors, experiment, family_id, num_voters, color='green', seed=0)
+    if os.path.exists(os.path.join(results_dir, algorithm, 'new-approvalwise-vectors.pkl')):
+        with open(os.path.join(results_dir, algorithm, 'new-approvalwise-vectors.pkl'), 'rb') as f:
+            new_approvalwise_vectors = pickle.load(f)
+    else:
+        with open(os.path.join(results_dir, algorithm, 'new_approvalwise_vectors_0.txt'), 'r') as f:
+            new_approvalwise_vectors, _num_voters = load_from_text_file(f)
+    add_sampled_elections_to_experiment(
+        new_approvalwise_vectors, experiment, algorithm, num_voters, color='blue', seed=0)
+    experiments.add_compass(experiment, with_grid=True)
+
+    experiment.compute_distances(distance_id='l1-approvalwise')
+    experiment.embed_2d(embedding_id="fr")
+    experiment.print_map_2d(legend=True, show=not save,
+                            saveas=os.path.join('..', algorithm_plots_dir,  'map.png') if save else None)
+
+
 def plot_algorithm(algorithm: str):
     report = pd.read_csv(os.path.join(results_dir, algorithm, 'report.csv'))
     reports = split_reports_if_necessary(report)
@@ -131,6 +163,12 @@ def plot_algorithm(algorithm: str):
     else:
         plt.show()
 
+    plot_maps(algorithm, algorithm_plots_dir, save)
+
+
+algorithm_plots_dir = os.path.join(plot_dir, 'gurobi')
+os.makedirs(algorithm_plots_dir, exist_ok=True)
+plot_maps('gurobi', algorithm_plots_dir, save)
 
 plot_algorithm('basin_hopping')
 plot_algorithm('basin_hopping_random')

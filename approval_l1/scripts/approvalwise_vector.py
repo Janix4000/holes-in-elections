@@ -30,12 +30,14 @@ def sample_election_from_approvalwise_vector(approvalwise_vector: np.ndarray, nu
     return election
 
 
-def add_sampled_elections_to_experiment(approvalwise_vectors: dir, experiment: mapel.ApprovalElectionExperiment, family_id: str, num_voters: int) -> None:
-    experiment.add_empty_family(family_id=family_id)
-    for instance_id, approvalwise_vector in approvalwise_vectors.items():
+def add_sampled_elections_to_experiment(approvalwise_vectors, experiment: mapel.ApprovalElectionExperiment, family_id: str, num_voters: int, color: str, seed: int | None) -> None:
+    experiment.add_empty_family(family_id=family_id, color=color)
+    vectors = approvalwise_vectors.items() if isinstance(
+        approvalwise_vectors, dict) else enumerate(approvalwise_vectors)
+    for instance_id, approvalwise_vector in vectors:
         election = sample_election_from_approvalwise_vector(
-            approvalwise_vector, num_voters)
-        election.instance_id = instance_id
+            approvalwise_vector, num_voters, seed=seed)
+        election.instance_id = str(instance_id)
         experiment.add_election_to_family(election, family_id=family_id)
 
 

@@ -46,7 +46,7 @@ def add_compass(experiment: mapel.ApprovalElectionExperiment, with_grid: bool = 
     experiment.add_election(culture_id='id', params={
                             'p': 0.5}, election_id='ID 0.5', color='orange')
 
-    experiment.add_empty_family(family_id='compass')
+    experiment.add_empty_family(family_id='compass', color='#CCCCCC')
 
     sample_election = next(iter(experiment.elections.values()))
     num_candidates = sample_election.num_candidates
