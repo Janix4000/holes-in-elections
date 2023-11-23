@@ -26,39 +26,27 @@ def measure_iteration(approvalwise_vectors: list[ApprovalwiseVector], algorithm:
     return farthest_approvalwise_vectors, distance, execution_time_s
 
 
-def run_experiment(
-        approvalwise_vectors: list[ApprovalwiseVector],
-        num_new_instances: int,
-        algorithm: Algorithm,
-        reference_algorithm: Algorithm,
-        report_out,
-        output_dir: str | None = None,
-        seed: str | None = None
-):
-
+def generate_reference(approvalwise_vectors: list[ApprovalwiseVector],
+                       num_new_instances: int,
+                       algorithm: Algorithm, report_out,
+                       output_dir: str | None = None,
+                       seed: str | None = None):
     if num_new_instances < 1:
         raise ValueError("num_new_instances must be greater than 0")
 
     approvalwise_vectors = approvalwise_vectors.copy()
     new_approvalwise_vectors = []
-    new_reference_approvalwise_vectors = []
 
     report_out.write(
-        "experiment_size,distance,execution_time,algorithm\n")
+        "experiment_size,distance,execution_time\n")
     for _ in range(num_new_instances):
         farthest_approvalwise_vectors, distance, execution_time_s = measure_iteration(
-            approvalwise_vectors, algorithm)
-        ref_farthest_approvalwise_vectors, ref_distance, ref_execution_time_s = measure_iteration(
-            approvalwise_vectors, reference_algorithm)
+            approvalwise_vectors, algorithm, seed=seed)
 
         new_approvalwise_vectors.append(farthest_approvalwise_vectors)
-        new_reference_approvalwise_vectors.append(
-            ref_farthest_approvalwise_vectors)
 
         report_out.write(
-            f"{len(approvalwise_vectors)},{distance},{execution_time_s},algorithm\n")
-        report_out.write(
-            f"{len(approvalwise_vectors)},{ref_distance},{ref_execution_time_s},reference\n")
+            f"{len(approvalwise_vectors)},{distance},{execution_time_s}\n")
 
         approvalwise_vectors.append(farthest_approvalwise_vectors)
 
@@ -66,9 +54,46 @@ def run_experiment(
             with open(os.path.join(output_dir, f"new_approvalwise_vectors.txt"), 'w') as out:
                 approvalwise_vector.dump_to_text_file(
                     new_approvalwise_vectors, out)
+            print(f'New approvalwise vectors saved to {output_dir}')
+
+    return new_approvalwise_vectors
+
+
+def run_experiment(
+        approvalwise_vectors: list[ApprovalwiseVector],
+        reference_approvalwise_vectors: list[ApprovalwiseVector],
+        num_new_instances: int,
+        algorithm: Algorithm,
+        report_out,
+        output_dir: str | None = None,
+):
+
+    if num_new_instances < 1:
+        raise ValueError("num_new_instances must be greater than 0")
+
+    approvalwise_vectors = approvalwise_vectors.copy()
+    new_approvalwise_vectors = []
+    reference_approvalwise_vectors = list(
+        reversed(reference_approvalwise_vectors))
+
+    report_out.write(
+        "experiment_size,distance,execution_time\n")
+
+    for _ in range(len(reference_approvalwise_vectors) + 1):
+        farthest_approvalwise_vectors, distance, execution_time_s = measure_iteration(
+            approvalwise_vectors, algorithm)
+
+        new_approvalwise_vectors.append(farthest_approvalwise_vectors)
+
+        report_out.write(
+            f"{len(approvalwise_vectors)},{distance},{execution_time_s}\n")
+
+        approvalwise_vectors.append(reference_approvalwise_vectors.pop())
+
+        if output_dir:
             with open(os.path.join(output_dir, f"new_reference_approvalwise_vectors.txt"), 'w') as out:
                 approvalwise_vector.dump_to_text_file(
-                    new_reference_approvalwise_vectors, out)
+                    new_approvalwise_vectors, out)
             print(f'New approvalwise vectors saved to {output_dir}')
 
 
@@ -121,12 +146,20 @@ def main():
         results_dir = os.path.join(
             'results', experiment_id, 'one_step_metric', algorithm_name)
         os.makedirs(results_dir, exist_ok=True)
+
         with open(os.path.join(results_dir, "report.csv"), 'w') as report_out:
-            run_experiment(approvalwise_vectors, num_new_instances, algorithm,
+
+            reference_approvalwise_vectors = generate_reference(
+                approvalwise_vectors, num_new_instances, algorithm, report_out, results_dir, seed=seed)
+
+        with open(os.path.join(results_dir, "reference-report.csv"), 'a') as report_out:
+            run_experiment(approvalwise_vectors, reference_approvalwise_vectors, num_new_instances,
                            reference_algorithm, report_out, results_dir, seed=seed)
     else:
-        run_experiment(approvalwise_vectors, num_new_instances, algorithm,
-                       reference_algorithm, sys.stdout, seed=seed)
+        reference_approvalwise_vectors = generate_reference(
+            approvalwise_vectors, num_new_instances, algorithm, sys.stdout, seed=seed)
+        run_experiment(approvalwise_vectors, reference_approvalwise_vectors, num_new_instances,
+                       reference_algorithm, sys.stdout)
 
 
 if __name__ == "__main__":

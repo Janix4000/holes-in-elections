@@ -76,7 +76,9 @@
     "ranges": "cpp",
     "thread": "cpp",
     "unordered_set": "cpp",
-    "random": "cpp"
+    "random": "cpp",
+    "list": "cpp",
+    "set": "cpp"
   },
   "cSpell.words": [
     "tqdm"

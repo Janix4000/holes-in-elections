@@ -88,3 +88,7 @@ def run_experiment(family_id: str, algorithm_id: str, num_instances: int, num_ca
         approvalwise_vectors, num_instances, generator, experiment_id, save_snapshots=family_dirpath)
 
     report.to_csv(os.path.join(family_dirpath, 'report.csv'))
+
+
+if __name__ == "__main__":
+    main()
