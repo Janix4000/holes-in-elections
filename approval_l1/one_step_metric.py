@@ -154,7 +154,7 @@ def main():
 
         with open(os.path.join(results_dir, "reference-report.csv"), 'a') as report_out:
             run_experiment(approvalwise_vectors, reference_approvalwise_vectors, num_new_instances,
-                           reference_algorithm, report_out, results_dir, seed=seed)
+                           reference_algorithm, report_out, results_dir)
     else:
         reference_approvalwise_vectors = generate_reference(
             approvalwise_vectors, num_new_instances, algorithm, sys.stdout, seed=seed)
