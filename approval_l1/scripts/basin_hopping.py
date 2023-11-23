@@ -69,6 +69,7 @@ def basin_hopping(
     ## Examples
     """
     num_voters = approvalwise_vectors[0].num_voters
+    num_candidates = approvalwise_vectors[0].num_candidates
 
     rng = np.random.default_rng(seed)
     x0_vector: np.ndarray = None
@@ -87,7 +88,6 @@ def basin_hopping(
     x0_vector = np.concatenate([x0_vector, np.array([0, num_voters])])
 
     approvalwise_vectors = np.array(approvalwise_vectors)
-    num_elections, num_candidates = approvalwise_vectors.shape
     if niter is None:
         niter = num_candidates * num_voters / \
             (2 * 0.05 * (step_size / 2 * (1 - big_step_chance) +
