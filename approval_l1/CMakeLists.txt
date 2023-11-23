@@ -30,6 +30,16 @@ add_library(my_lib STATIC ${SOURCES})
 # Link against Boost libraries
 target_link_libraries(my_lib ${Boost_LIBRARIES})
 
+# Find all source files in the bindings directory
+file(GLOB BINDING_SOURCES "bindings/*.cpp")
+
+# Add the shared library
+add_library(my_bindings SHARED ${BINDING_SOURCES})
+
+# Link necessary libraries, for example, Boost libraries
+target_link_libraries(my_bindings ${Boost_LIBRARIES})
+target_link_libraries(my_bindings my_lib)
+
 # Create executables for each script file
 file(GLOB SCRIPTS "scripts/*.cpp")
 foreach(script_file ${SCRIPTS})
