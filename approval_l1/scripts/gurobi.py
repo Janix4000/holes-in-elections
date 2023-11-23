@@ -1,7 +1,7 @@
 import argparse
 import time
 
-from approval_l1.scripts.approvalwise_vector import ApprovalwiseVector
+from scripts.approvalwise_vector import ApprovalwiseVector
 
 try:
     import gurobipy as gp
@@ -98,7 +98,7 @@ if __name__ == '__main__':
     print('r,dist,dist_prop,time')
     for i in range(3, num_voters + 3):
         start = time.time()
-        x, dist = gurobi_ilp(votings_hists, num_voters,
+        x, dist = gurobi_ilp(votings_hists,
                              max_dist=max_expected_dist)
         dt = time.time() - start
         print(f'{i},{dist},{dist/(num_voters*num_candidates):.4f},{dt:.4f}')

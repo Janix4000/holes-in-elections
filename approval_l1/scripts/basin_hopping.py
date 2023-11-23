@@ -15,9 +15,9 @@ def find_best_starting_step_vector(approvalwise_vectors: list[ApprovalwiseVector
     candidates = np.ones((num_candidates + 1, num_candidates)) * num_voters
     for i in range(num_candidates):
         candidates[i, i:] = 0
-    candidates = list(candidates) + first_candidates
+    candidates = list(candidates) + list(first_candidates)
     distances = np.array(
-        [__distance_across(approvalwise_vectors, x) for x in candidates])
+        [__distance_across(np.array(approvalwise_vectors), x) for x in candidates])
     return candidates[distances.argmax()]
 
 
@@ -69,6 +69,23 @@ def basin_hopping(
     ## Examples
     """
     num_voters = approvalwise_vectors[0].num_voters
+
+    rng = np.random.default_rng(seed)
+    x0_vector: np.ndarray = None
+    match x0:
+        case 'random':
+            x0_vector = rng.integers(
+                0, num_voters, size=num_candidates)
+            x0_vector[::-1].sort()
+        case 'random_resampling':
+            x0_vector = sample_approvalwise_vector(
+                num_voters, num_candidates, rng)
+        case 'step_vector':
+            x0_vector = find_best_starting_step_vector(approvalwise_vectors)
+        case _:
+            x0_vector = np.array(x0)
+    x0_vector = np.concatenate([x0_vector, np.array([0, num_voters])])
+
     approvalwise_vectors = np.array(approvalwise_vectors)
     num_elections, num_candidates = approvalwise_vectors.shape
     if niter is None:
@@ -76,21 +93,6 @@ def basin_hopping(
             (2 * 0.05 * (step_size / 2 * (1 - big_step_chance) +
              num_candidates * big_step_chance))
         niter = max(round(niter), 1000)
-
-    rng = np.random.default_rng(seed)
-
-    match x0:
-        case 'random':
-            x0 = rng.integers(0, num_voters, size=num_candidates)
-            x0[::-1].sort()
-        case 'random_resampling':
-            x0 = sample_approvalwise_vector(num_voters, num_candidates, rng)
-        case 'step_vector':
-            x0 = find_best_starting_step_vector(
-                approvalwise_vectors, num_voters)
-        case _:
-            x0 = np.array(x0)
-    x0 = np.concatenate([x0, np.array([0, num_voters])])
 
     def f(x):
         nonlocal approvalwise_vectors
@@ -133,10 +135,10 @@ def basin_hopping(
             x = unit_step(x)
         return x
 
-    res = basinhopping(f, x0, niter=niter,
+    res = basinhopping(f, x0_vector, niter=niter,
                        take_step=step_function, seed=seed)
     x = __to_int(res.x[:-2])
-    return np.array(x, dtype=int), -int(res.fun)
+    return ApprovalwiseVector(np.array(x, dtype=int), num_voters), -int(res.fun)
 
 
 if __name__ == '__main__':
@@ -168,7 +170,7 @@ if __name__ == '__main__':
     for i in range(3, num_elections + 3):
         start = time.time()
         x, score = basin_hopping(
-            approvalwise_vectors, num_voters, niter=niter, step_size=step_size, big_step_chance=big_step_chance)
+            approvalwise_vectors, niter=niter, step_size=step_size, big_step_chance=big_step_chance)
         dt = time.time() - start
         print(f'{i},{score},{score/(num_voters*num_candidates):.4f},{dt:.4f}')
         approvalwise_vectors.append(x)
