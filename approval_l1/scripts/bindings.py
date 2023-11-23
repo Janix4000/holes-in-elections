@@ -4,11 +4,21 @@ import ctypes
 from scripts.approvalwise_vector import ApprovalwiseVector
 
 import os
+import platform
 cwd = os.getcwd()
 print(cwd)
 
 # Load the shared library
-my_functions = ctypes.CDLL('./build/libmy_bindings.dylib')
+
+system = platform.system()
+if system == 'Windows':
+    my_functions = ctypes.CDLL('./build/libmy_bindings.dll')
+elif system == 'Linux':
+    my_functions = ctypes.CDLL('./build/libmy_bindings.so')
+elif system == 'Darwin':
+    my_functions = ctypes.CDLL('./build/libmy_bindings.dylib')
+else:
+    raise Exception(f"Unsupported platform: {system}")
 
 # Provide the necessary information about the function to call
 my_functions.greedy_dp_binding.restype = ctypes.c_int
