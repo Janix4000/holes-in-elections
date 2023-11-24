@@ -88,13 +88,14 @@ def run_experiment(
         report_out.write(
             f"{len(approvalwise_vectors)},{distance},{execution_time_s}\n")
 
-        approvalwise_vectors.append(reference_approvalwise_vectors.pop())
-
         if output_dir:
             with open(os.path.join(output_dir, f"new_reference_approvalwise_vectors.txt"), 'w') as out:
                 approvalwise_vector.dump_to_text_file(
                     new_approvalwise_vectors, out)
             print(f'New approvalwise vectors saved to {output_dir}')
+
+        if reference_approvalwise_vectors:
+            approvalwise_vectors.append(reference_approvalwise_vectors.pop())
 
 
 def main():
