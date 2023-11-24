@@ -1,9 +1,6 @@
 import os
 import sys
 import time
-from typing import Callable
-
-import numpy as np
 
 import generate_elections
 
