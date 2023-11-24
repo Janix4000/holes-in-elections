@@ -11,7 +11,6 @@ def generate(num_candidates: int, num_voters: int, num_instances: int, family_id
     experiment_id = f'{size_id}/{family_id}'
 
     experiment = mapel.prepare_online_approval_experiment(
-        experiment_id=experiment_id,
         distance_id="l1-approvalwise",
         embedding_id="fr"
     )
