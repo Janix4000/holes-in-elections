@@ -23,7 +23,7 @@ def generate_reference(approvalwise_vectors: list[ApprovalwiseVector],
                        num_new_instances: int,
                        algorithm: Algorithm, report_out,
                        output_dir: str | None = None,
-                       seed: str | None = None):
+                       **kwargs):
     if num_new_instances < 1:
         raise ValueError("num_new_instances must be greater than 0")
 
@@ -34,7 +34,7 @@ def generate_reference(approvalwise_vectors: list[ApprovalwiseVector],
         "experiment_size,distance,execution_time\n")
     for _ in range(num_new_instances):
         farthest_approvalwise_vectors, distance, execution_time_s = measure_iteration(
-            approvalwise_vectors, algorithm, seed=seed)
+            approvalwise_vectors, algorithm, **kwargs)
 
         new_approvalwise_vectors.append(farthest_approvalwise_vectors)
 
@@ -138,6 +138,10 @@ def main():
     algorithm = algorithms[algorithm_name]
     reference_algorithm = algorithms[reference_algorithm_name]
 
+    kwargs = {
+        'seed': seed
+    } if seed is not None else {}
+
     if save_results:
         results_dir = os.path.join(
             'results', experiment_id, 'one_step_metric', algorithm_name)
@@ -146,14 +150,14 @@ def main():
         with open(os.path.join(results_dir, "report.csv"), 'w') as report_out:
 
             reference_approvalwise_vectors = generate_reference(
-                approvalwise_vectors, num_new_instances, algorithm, report_out, results_dir, seed=seed)
+                approvalwise_vectors, num_new_instances, algorithm, report_out, results_dir, **kwargs)
 
         with open(os.path.join(results_dir, "reference-report.csv"), 'a') as report_out:
             run_experiment(approvalwise_vectors, reference_approvalwise_vectors, num_new_instances,
                            reference_algorithm, report_out, results_dir)
     else:
         reference_approvalwise_vectors = generate_reference(
-            approvalwise_vectors, num_new_instances, algorithm, sys.stdout, seed=seed)
+            approvalwise_vectors, num_new_instances, algorithm, sys.stdout, **kwargs)
         run_experiment(approvalwise_vectors, reference_approvalwise_vectors, num_new_instances,
                        reference_algorithm, sys.stdout)
 
