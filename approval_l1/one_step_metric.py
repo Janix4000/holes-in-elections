@@ -10,14 +10,10 @@ from scripts.approvalwise_vector import ApprovalwiseVector, get_approvalwise_vec
 from scripts.algorithms import Algorithm, algorithms
 
 
-def measure_iteration(approvalwise_vectors: list[ApprovalwiseVector], algorithm: Algorithm, seed: str | None = None):
+def measure_iteration(approvalwise_vectors: list[ApprovalwiseVector], algorithm: Algorithm, **kwargs):
     start_time = time.time()
-    if seed is not None:
-        farthest_approvalwise_vectors, distance = algorithm(
-            approvalwise_vectors, seed=seed)
-    else:
-        farthest_approvalwise_vectors, distance = algorithm(
-            approvalwise_vectors)
+    farthest_approvalwise_vectors, distance = algorithm(
+        approvalwise_vectors, **kwargs)
     execution_time_s = time.time() - start_time
 
     return farthest_approvalwise_vectors, distance, execution_time_s
@@ -76,11 +72,13 @@ def run_experiment(
     report_out.write(
         "experiment_size,distance,execution_time\n")
 
+    max_dist = None
     for _ in range(len(reference_approvalwise_vectors) + 1):
         farthest_approvalwise_vectors, distance, execution_time_s = measure_iteration(
-            approvalwise_vectors, algorithm)
+            approvalwise_vectors, algorithm, max_dist=max_dist)
 
         new_approvalwise_vectors.append(farthest_approvalwise_vectors)
+        max_dist = distance
 
         report_out.write(
             f"{len(approvalwise_vectors)},{distance},{execution_time_s}\n")
