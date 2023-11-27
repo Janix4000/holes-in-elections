@@ -1,3 +1,6 @@
+#include <algorithm>
+#include <vector>
+
 #include "approvalwise_vector.hpp"
 #include "definitions.hpp"
 
@@ -69,23 +72,24 @@ pair<approvalwise_vector_t, int> farthest_approvalwise_vector(
             // remove_if(all(cell.nodes), )
 
             std::vector<Node> maximal_nodes;
-            copy_if(all(cell.nodes), back_inserter(maximal_nodes),
-                    [&cell](const auto& node) {
-                        return none_of(
-                            all(cell.nodes), [&node](const auto& other_node) {
-                                if (other_node.single_dists.size() !=
-                                    node.single_dists.size()) {
-                                    return false;
-                                }
-                                bool all_greater = true;
-                                for (size_t i = 0; i < node.single_dists.size();
-                                     i++) {
-                                    all_greater &= other_node.single_dists[i] >
-                                                   node.single_dists[i];
-                                }
-                                return all_greater;
-                            });
-                    });
+            std::copy_if(
+                all(cell.nodes), back_inserter(maximal_nodes),
+                [&cell](const auto& node) {
+                    return none_of(
+                        all(cell.nodes), [&node](const auto& other_node) {
+                            if (other_node.single_dists.size() !=
+                                node.single_dists.size()) {
+                                return false;
+                            }
+                            bool all_greater = true;
+                            for (size_t i = 0; i < node.single_dists.size();
+                                 i++) {
+                                all_greater &= other_node.single_dists[i] >
+                                               node.single_dists[i];
+                            }
+                            return all_greater;
+                        });
+                });
             cell.nodes = maximal_nodes;
         }
     }
