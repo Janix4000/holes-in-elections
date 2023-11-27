@@ -27,6 +27,9 @@ include_directories("include/third-party")
 # Create a library from your source files
 add_library(my_lib STATIC ${SOURCES})
 
+# Enable PIC for my_lib
+set_property(TARGET my_lib PROPERTY POSITION_INDEPENDENT_CODE ON)
+
 # Link against Boost libraries
 target_link_libraries(my_lib ${Boost_LIBRARIES})
 
