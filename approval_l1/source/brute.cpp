@@ -8,7 +8,7 @@ struct Node {
     int from_y = -1;
     int from_idx = -1;
     int min_dist = 0;
-    vector<int> single_dists;
+    std::vector<int> single_dists;
 
     bool operator<=(const Node& rhs) const {
         if (rhs.single_dists.empty()) return true;
@@ -21,18 +21,18 @@ struct Node {
 };
 
 struct Cell {
-    vector<Node> nodes;
+    std::vector<Node> nodes;
 };
 }  // namespace
 
-void remove_non_maximal(vector<Node>& nodes) {}
+void remove_non_maximal(std::vector<Node>& nodes) {}
 
 pair<approvalwise_vector_t, int> farthest_approvalwise_vector(
-    const vector<approvalwise_vector_t>& votings_hist, const int N) {
+    const std::vector<approvalwise_vector_t>& votings_hist, const int N) {
     const int R = votings_hist.size();
     const int M = votings_hist.front().size();
 
-    vector<vector<Cell>> cells(M, vector<Cell>(N + 1));
+    std::vector<std::vector<Cell>> cells(M, std::vector<Cell>(N + 1));
 
     {
         int x = 0;
@@ -68,7 +68,7 @@ pair<approvalwise_vector_t, int> farthest_approvalwise_vector(
 
             // remove_if(all(cell.nodes), )
 
-            vector<Node> maximal_nodes;
+            std::vector<Node> maximal_nodes;
             copy_if(all(cell.nodes), back_inserter(maximal_nodes),
                     [&cell](const auto& node) {
                         return none_of(
@@ -90,15 +90,15 @@ pair<approvalwise_vector_t, int> farthest_approvalwise_vector(
         }
     }
 
-    vector<Node> backs_maxs(N + 1);
+    std::vector<Node> backs_maxs(N + 1);
 
     for (int y = 0; y < N + 1; y++) {
         auto& cell = cells.back()[y];
         for (auto& node : cell.nodes) {
-            node.min_dist = *min_element(all(node.single_dists));
+            node.min_dist = *std::min_element(all(node.single_dists));
         }
         auto it =
-            max_element(all(cell.nodes), [](const auto& l, const auto& r) {
+            std::max_element(all(cell.nodes), [](const auto& l, const auto& r) {
                 return l.min_dist < r.min_dist;
             });
         backs_maxs[y] = *it;
