@@ -2,6 +2,8 @@
 #include <fstream>
 #include <functional>
 #include <iostream>
+#include <optional>
+#include <string>
 
 #include "approvalwise_vector.hpp"
 #include "definitions.hpp"
