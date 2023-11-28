@@ -21,7 +21,9 @@ def measure_iteration(approvalwise_vectors: list[ApprovalwiseVector], algorithm:
 
 def generate_reference(approvalwise_vectors: list[ApprovalwiseVector],
                        num_new_instances: int,
-                       algorithm: Algorithm, report_out,
+                       algorithm: Algorithm,
+                       idx: int,
+                       report_out,
                        output_dir: str | None = None,
                        **kwargs):
     if num_new_instances < 1:
@@ -30,8 +32,10 @@ def generate_reference(approvalwise_vectors: list[ApprovalwiseVector],
     approvalwise_vectors = approvalwise_vectors.copy()
     new_approvalwise_vectors = []
 
-    report_out.write(
-        "experiment_size,distance,execution_time\n")
+    if idx == 0:
+        report_out.write(
+            "experiment_size,distance,execution_time,idx\n")
+
     for _ in range(num_new_instances):
         farthest_approvalwise_vectors, distance, execution_time_s = measure_iteration(
             approvalwise_vectors, algorithm, **kwargs)
@@ -39,15 +43,17 @@ def generate_reference(approvalwise_vectors: list[ApprovalwiseVector],
         new_approvalwise_vectors.append(farthest_approvalwise_vectors)
 
         report_out.write(
-            f"{len(approvalwise_vectors)},{distance},{execution_time_s}\n")
+            f"{len(approvalwise_vectors)},{distance},{execution_time_s},{idx}\n")
 
         approvalwise_vectors.append(farthest_approvalwise_vectors)
 
         if output_dir:
-            with open(os.path.join(output_dir, f"new_approvalwise_vectors.txt"), 'w') as out:
+            filepath = os.path.join(
+                output_dir, f"new_approvalwise_vectors.txt")
+            with open(filepath, 'w') as out:
                 approvalwise_vector.dump_to_text_file(
                     new_approvalwise_vectors, out)
-            print(f'New approvalwise vectors saved to {output_dir}')
+            print(f'New approvalwise vectors saved to {filepath}')
 
     return new_approvalwise_vectors
 
@@ -57,6 +63,7 @@ def run_experiment(
         reference_approvalwise_vectors: list[ApprovalwiseVector],
         num_new_instances: int,
         algorithm: Algorithm,
+        idx: int,
         report_out,
         output_dir: str | None = None,
 ):
@@ -69,8 +76,9 @@ def run_experiment(
     reference_approvalwise_vectors = list(
         reversed(reference_approvalwise_vectors))
 
-    report_out.write(
-        "experiment_size,distance,execution_time\n")
+    if idx == 0:
+        report_out.write(
+            "experiment_size,distance,execution_time,idx\n")
 
     max_dist = None
     for _ in range(len(reference_approvalwise_vectors) + 1):
@@ -81,13 +89,15 @@ def run_experiment(
         max_dist = distance
 
         report_out.write(
-            f"{len(approvalwise_vectors)},{distance},{execution_time_s}\n")
+            f"{len(approvalwise_vectors)},{distance},{execution_time_s},{idx}\n")
 
         if output_dir:
-            with open(os.path.join(output_dir, f"new_reference_approvalwise_vectors.txt"), 'w') as out:
+            filepath = os.path.join(
+                output_dir, f"new_approvalwise_vectors.txt")
+            with open(filepath, 'w') as out:
                 approvalwise_vector.dump_to_text_file(
                     new_approvalwise_vectors, out)
-            print(f'New approvalwise vectors saved to {output_dir}')
+            print(f'New approvalwise vectors saved to {filepath}')
 
         if reference_approvalwise_vectors:
             approvalwise_vectors.append(reference_approvalwise_vectors.pop())
@@ -105,7 +115,7 @@ def main():
     parser.add_argument("--algorithm", type=str, default="basin_hopping")
     parser.add_argument("--reference_algorithm", type=str, default='gurobi')
     parser.add_argument("--load_from_file", type=str, default=None)
-    parser.add_argument("--seed", type=str, default=None)
+    parser.add_argument("--num_trials", type=int, default=1)
     parser.add_argument("--save_results", action="store_true")
 
     args = parser.parse_args()
@@ -119,47 +129,46 @@ def main():
     algorithm_name = args.algorithm
     reference_algorithm_name = args.reference_algorithm
     save_results = args.save_results
-    seed = args.seed
-
-    experiment_id = os.path.join(
-        f'{num_candidates}x{num_voters}', family)
-
-    if load_from_file:
-        load_dir = os.path.join('experiments', experiment_id, load_from_file)
-        with open(os.path.join(load_dir, "approvalwise_vectors.txt"), 'r') as in_file:
-            approvalwise_vectors = approvalwise_vector.load_from_text_file(
-                in_file)
-            approvalwise_vectors = list(approvalwise_vectors.values())
-    else:
-        experiment = generate_elections.generate(
-            num_candidates, num_voters, num_instances, family)
-        approvalwise_vectors = get_approvalwise_vectors(experiment.elections)
+    num_trials = args.num_trials
 
     algorithm = algorithms[algorithm_name]
     reference_algorithm = algorithms[reference_algorithm_name]
+    experiment_id = os.path.join(
+        f'{num_candidates}x{num_voters}', family)
 
-    kwargs = {
-        'seed': seed
-    } if seed is not None else {}
+    for trial_idx in range(num_trials):
 
-    if save_results:
-        results_dir = os.path.join(
-            'results', experiment_id, 'one_step_metric', algorithm_name)
-        os.makedirs(results_dir, exist_ok=True)
+        if load_from_file:
+            load_dir = os.path.join(
+                'experiments', experiment_id, load_from_file)
+            with open(os.path.join(load_dir, "approvalwise_vectors.txt"), 'r') as in_file:
+                approvalwise_vectors = approvalwise_vector.load_from_text_file(
+                    in_file)
+                approvalwise_vectors = list(approvalwise_vectors.values())
+        else:
+            experiment = generate_elections.generate(
+                num_candidates, num_voters, num_instances, family)
+            approvalwise_vectors = get_approvalwise_vectors(
+                experiment.elections)
 
-        with open(os.path.join(results_dir, "report.csv"), 'w') as report_out:
+        if save_results:
+            results_dir = os.path.join(
+                'results', experiment_id, 'one_step_metric', algorithm_name)
+            os.makedirs(results_dir, exist_ok=True)
 
+            with open(os.path.join(results_dir, "report.csv"), 'w') as report_out:
+
+                reference_approvalwise_vectors = generate_reference(
+                    approvalwise_vectors, num_new_instances, algorithm, trial_idx, report_out, results_dir)
+
+            with open(os.path.join(results_dir, "reference-report.csv"), 'a') as report_out:
+                run_experiment(approvalwise_vectors, reference_approvalwise_vectors, num_new_instances,
+                               reference_algorithm, report_out, results_dir)
+        else:
             reference_approvalwise_vectors = generate_reference(
-                approvalwise_vectors, num_new_instances, algorithm, report_out, results_dir, **kwargs)
-
-        with open(os.path.join(results_dir, "reference-report.csv"), 'a') as report_out:
+                approvalwise_vectors, num_new_instances, algorithm, sys.stdout)
             run_experiment(approvalwise_vectors, reference_approvalwise_vectors, num_new_instances,
-                           reference_algorithm, report_out, results_dir)
-    else:
-        reference_approvalwise_vectors = generate_reference(
-            approvalwise_vectors, num_new_instances, algorithm, sys.stdout, **kwargs)
-        run_experiment(approvalwise_vectors, reference_approvalwise_vectors, num_new_instances,
-                       reference_algorithm, sys.stdout)
+                           reference_algorithm, trial_idx, sys.stdout, None)
 
 
 if __name__ == "__main__":
