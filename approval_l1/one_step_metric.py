@@ -113,7 +113,7 @@ def main():
     parser.add_argument("--num_new_instances", type=int, default=12)
     parser.add_argument("--family", type=str, default="euclidean")
     parser.add_argument("--algorithm", type=str, default="basin_hopping")
-    parser.add_argument("--reference_algorithm", type=str, default='gurobi')
+    parser.add_argument("--reference_algorithm", type=str, default=None)
     parser.add_argument("--load_from_file", type=str, default=None)
     parser.add_argument("--num_trials", type=int, default=1)
     parser.add_argument("--save_results", action="store_true")
@@ -132,7 +132,7 @@ def main():
     num_trials = args.num_trials
 
     algorithm = algorithms[algorithm_name]
-    reference_algorithm = algorithms[reference_algorithm_name]
+    reference_algorithm = algorithms[reference_algorithm_name] if reference_algorithm is not None else None
     experiment_id = os.path.join(
         f'{num_candidates}x{num_voters}', family)
 
@@ -156,19 +156,21 @@ def main():
                 'results', experiment_id, 'one_step_metric', algorithm_name)
             os.makedirs(results_dir, exist_ok=True)
 
-            with open(os.path.join(results_dir, "report.csv"), 'w') as report_out:
+            with open(os.path.join(results_dir, "report.csv"), 'a') as report_out:
 
                 reference_approvalwise_vectors = generate_reference(
                     approvalwise_vectors, num_new_instances, algorithm, trial_idx, report_out, results_dir)
 
-            with open(os.path.join(results_dir, "reference-report.csv"), 'a') as report_out:
-                run_experiment(approvalwise_vectors, reference_approvalwise_vectors, num_new_instances,
-                               reference_algorithm, trial_idx, report_out, results_dir)
+            if reference_algorithm is not None:
+                with open(os.path.join(results_dir, "reference-report.csv"), 'a') as report_out:
+                    run_experiment(approvalwise_vectors, reference_approvalwise_vectors, num_new_instances,
+                                   reference_algorithm, trial_idx, report_out, results_dir)
         else:
             reference_approvalwise_vectors = generate_reference(
                 approvalwise_vectors, num_new_instances, algorithm, sys.stdout)
-            run_experiment(approvalwise_vectors, reference_approvalwise_vectors, num_new_instances,
-                           reference_algorithm, trial_idx, sys.stdout, None)
+            if reference_algorithm is not None:
+                run_experiment(approvalwise_vectors, reference_approvalwise_vectors, num_new_instances,
+                               reference_algorithm, trial_idx, sys.stdout, None)
 
 
 if __name__ == "__main__":
