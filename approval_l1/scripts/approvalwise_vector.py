@@ -8,7 +8,7 @@ class ApprovalwiseVector(np.ndarray):
         obj = np.asarray(approvalwise_vector).view(cls)
         if any(obj[1:] > obj[:-1]):
             raise ValueError(
-                'Approvalwise vector must be sorted in non increasing order')
+                'Approvalwise vector must be sorted in non increasing order {obj}')
         obj.num_voters = num_voters
         return obj
 
