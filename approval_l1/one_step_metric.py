@@ -49,7 +49,7 @@ def generate_reference(approvalwise_vectors: list[ApprovalwiseVector],
 
         if output_dir:
             filepath = os.path.join(
-                output_dir, f"new_approvalwise_vectors.txt")
+                output_dir, f"new_approvalwise_vectors_{idx}.txt")
             with open(filepath, 'w') as out:
                 approvalwise_vector.dump_to_text_file(
                     new_approvalwise_vectors, out)
@@ -93,7 +93,7 @@ def run_experiment(
 
         if output_dir:
             filepath = os.path.join(
-                output_dir, f"new_approvalwise_vectors.txt")
+                output_dir, f"reference_new_approvalwise_vectors_{idx}.txt")
             with open(filepath, 'w') as out:
                 approvalwise_vector.dump_to_text_file(
                     new_approvalwise_vectors, out)
