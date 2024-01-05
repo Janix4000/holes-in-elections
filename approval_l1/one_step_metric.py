@@ -132,7 +132,7 @@ def main():
     num_trials = args.num_trials
 
     algorithm = algorithms[algorithm_name]
-    reference_algorithm = algorithms[reference_algorithm_name] if reference_algorithm is not None else None
+    reference_algorithm = algorithms[reference_algorithm_name] if reference_algorithm_name is not None else None
     experiment_id = os.path.join(
         f'{num_candidates}x{num_voters}', family)
 
