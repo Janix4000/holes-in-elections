@@ -11,10 +11,10 @@ from scripts.algorithms import Algorithm, algorithms
 
 
 def measure_iteration(approvalwise_vectors: list[ApprovalwiseVector], algorithm: Algorithm, **kwargs):
-    start_time = time.time()
+    start_time = time.process_time()
     farthest_approvalwise_vectors, distance = algorithm(
         approvalwise_vectors, **kwargs)
-    execution_time_s = time.time() - start_time
+    execution_time_s = time.process_time() - start_time
 
     return farthest_approvalwise_vectors, distance, execution_time_s
 

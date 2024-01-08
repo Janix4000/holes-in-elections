@@ -6,7 +6,7 @@ import scripts.experiments as experiments
 import os
 import numpy as np
 import pickle
-from scripts.approvalwise_vector import add_sampled_elections_to_experiment, get_approvalwise_vectors, load_from_text_file, sample_election_from_approvalwise_vector
+from scripts.approvalwise_vector import add_sampled_elections_to_experiment, get_approvalwise_vectors, load_from_text_file
 from matplotlib import ticker
 
 plt.rcParams['figure.dpi'] = 300
