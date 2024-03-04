@@ -1,6 +1,7 @@
 import os
 import sys
 import time
+import typing
 
 import generate_elections
 
@@ -23,7 +24,7 @@ def generate_reference(approvalwise_vectors: list[ApprovalwiseVector],
                        num_new_instances: int,
                        algorithm: Algorithm,
                        idx: int,
-                       report_out,
+                       csv_report_out: typing.TextIO,
                        output_dir: str | None = None,
                        **kwargs):
     if num_new_instances < 1:
@@ -33,7 +34,7 @@ def generate_reference(approvalwise_vectors: list[ApprovalwiseVector],
     new_approvalwise_vectors = []
 
     if idx == 0:
-        report_out.write(
+        csv_report_out.write(
             "experiment_size,distance,execution_time,idx\n")
 
     for _ in range(num_new_instances):
@@ -42,7 +43,7 @@ def generate_reference(approvalwise_vectors: list[ApprovalwiseVector],
 
         new_approvalwise_vectors.append(farthest_approvalwise_vectors)
 
-        report_out.write(
+        csv_report_out.write(
             f"{len(approvalwise_vectors)},{distance},{execution_time_s},{idx}\n")
 
         approvalwise_vectors.append(farthest_approvalwise_vectors)
@@ -64,7 +65,7 @@ def run_experiment(
         num_new_instances: int,
         algorithm: Algorithm,
         idx: int,
-        report_out,
+        csv_report_out: typing.TextIO,
         output_dir: str | None = None,
 ):
 
@@ -77,7 +78,7 @@ def run_experiment(
         reversed(reference_approvalwise_vectors))
 
     if idx == 0:
-        report_out.write(
+        csv_report_out.write(
             "experiment_size,distance,execution_time,idx\n")
 
     max_dist = None
@@ -88,7 +89,7 @@ def run_experiment(
         new_approvalwise_vectors.append(farthest_approvalwise_vectors)
         max_dist = distance
 
-        report_out.write(
+        csv_report_out.write(
             f"{len(approvalwise_vectors)},{distance},{execution_time_s},{idx}\n")
 
         if output_dir:

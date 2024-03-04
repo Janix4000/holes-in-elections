@@ -1,4 +1,5 @@
 import time
+import typing
 import numpy as np
 import pandas as pd
 from scripts.approvalwise_vector import ApprovalwiseVector
@@ -20,20 +21,27 @@ def measure_iteration(approvalwise_vectors: list[ApprovalwiseVector], algorithm:
 
 def heuristic_to_change_next_reference(initial_approvalwise_vectors: list[ApprovalwiseVector],
                                        reference_algorithm: Algorithm, heuristic_algorithm: Algorithm,
-                                       num_generated: int, num_trials: int = 1, verbose: bool = False):
+                                       num_generated: int, csv_report_out: typing.TextIO, num_trials: int = 1):
 
     approvalwise_vectors = initial_approvalwise_vectors[:]
+    new_reference_approvalwise_vectors = []
+    new_heuristic_approvalwise_vectors = []
 
-    report = []
+    csv_report_columns = [
+        'i_generated', 'distance', 'reference_distance', 'i_heuristic', 'i_trial', 'dt', 'algorithm']
+    csv_report_out.write(','.join(csv_report_columns) + '\n')
 
     for i_generated in range(num_generated):
         new_reference_approvalwise_vector, reference_distance, dt = measure_iteration(
             approvalwise_vectors, reference_algorithm)
-        row = (i_generated, reference_distance,
-               reference_distance, None, None, dt, 'reference')
-        report.append(row)
-        if verbose:
-            print(row)
+
+        new_reference_approvalwise_vectors.append(
+            new_reference_approvalwise_vector)
+        yield new_reference_approvalwise_vectors, new_heuristic_approvalwise_vectors
+
+        report_row = (i_generated, reference_distance,
+                      reference_distance, None, None, dt, 'reference')
+        csv_report_out.write(','.join(map(str, report_row)) + '\n')
 
         new_approvalwise_vectors = None
 
@@ -43,20 +51,21 @@ def heuristic_to_change_next_reference(initial_approvalwise_vectors: list[Approv
             while True:
                 new_heuristic_approvalwise_vector, heuristic_distance, dt = measure_iteration(
                     trial_approvalwise_vectors, heuristic_algorithm)
+
+                if i_trial == num_trials - 1:
+                    new_heuristic_approvalwise_vectors.append(
+                        new_heuristic_approvalwise_vector)
+                    yield new_reference_approvalwise_vectors, new_heuristic_approvalwise_vectors
+
                 trial_approvalwise_vectors.append(
                     new_heuristic_approvalwise_vector)
-                row = (i_generated, heuristic_distance, reference_distance,
-                       i_heuristic, i_trial, dt, 'heuristic')
-                report.append(row)
-                if verbose:
-                    print(row)
+
+                report_row = (i_generated, heuristic_distance, reference_distance,
+                              i_heuristic, i_trial, dt, 'heuristic')
+                csv_report_out.write(','.join(map(str, report_row)) + '\n')
+
                 i_heuristic += 1
                 if __distance_across(trial_approvalwise_vectors, new_reference_approvalwise_vector) < reference_distance:
                     break
             new_approvalwise_vectors = trial_approvalwise_vectors
         approvalwise_vectors = new_approvalwise_vectors
-
-    report = pd.DataFrame(report, columns=[
-                          'i_generated', 'distance', 'reference_distance', 'i_heuristic', 'i_trial', 'dt', 'algorithm'])
-
-    return report
