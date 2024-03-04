@@ -8,7 +8,8 @@ import mapel.elections as mapel
 from scripts.approvalwise_vector import ApprovalwiseVector, get_approvalwise_vector
 
 
-def find_best_starting_step_vector(approvalwise_vectors: list[ApprovalwiseVector], first_candidates: list[ApprovalwiseVector] | None = None) -> ApprovalwiseVector:
+def __find_best_starting_step_vector(approvalwise_vectors: list[ApprovalwiseVector],
+                                     first_candidates: list[ApprovalwiseVector] | None = None) -> ApprovalwiseVector:
     first_candidates = first_candidates or []
     num_candidates = approvalwise_vectors[0].num_candidates
     num_voters = approvalwise_vectors[0].num_voters
@@ -21,7 +22,7 @@ def find_best_starting_step_vector(approvalwise_vectors: list[ApprovalwiseVector
     return candidates[distances.argmax()]
 
 
-def sample_approvalwise_vector(num_voters: int, num_candidates: int, rng):
+def __sample_approvalwise_vector_with_resampling(num_voters: int, num_candidates: int, rng):
     p, phi = rng.random(2)
     election = mapel.generate_approval_election(
         num_candidates=num_candidates,
@@ -30,6 +31,13 @@ def sample_approvalwise_vector(num_voters: int, num_candidates: int, rng):
         params={'p': p, 'phi': phi}
     )
     return get_approvalwise_vector(election)
+
+
+def __random_approvalwise_vector(num_voters: int, num_candidates: int, rng, tries=10):
+    x0_vector = rng.integers(
+        0, num_voters, size=(tries, num_candidates))
+    x0_vector[::-1].sort(axis=1)
+    return x0_vector
 
 
 def __distance_across(approvalwise_vectors: np.ndarray, x: ApprovalwiseVector) -> int:
@@ -75,14 +83,19 @@ def basin_hopping(
     x0_vector: np.ndarray = None
     match x0:
         case 'random':
-            x0_vector = rng.integers(
-                0, num_voters, size=num_candidates)
-            x0_vector[::-1].sort()
+            x0_vector = __random_approvalwise_vector(
+                num_voters, num_candidates, rng)
         case 'random_resampling':
-            x0_vector = sample_approvalwise_vector(
+            x0_vector = __sample_approvalwise_vector_with_resampling(
                 num_voters, num_candidates, rng)
         case 'step_vector':
-            x0_vector = find_best_starting_step_vector(approvalwise_vectors)
+            x0_vector = __find_best_starting_step_vector(approvalwise_vectors)
+        case 'mix':
+            candidates = rng.integers(
+                0, num_voters, size=(20, num_candidates))
+            candidates[::-1].sort(axis=1)
+            x0_vector = __find_best_starting_step_vector(
+                approvalwise_vectors, candidates)
         case _:
             x0_vector = np.array(x0)
     x0_vector = np.concatenate([x0_vector, np.array([0, num_voters])])
