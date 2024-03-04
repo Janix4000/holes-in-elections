@@ -40,7 +40,7 @@ def heuristic_to_change_next_reference(initial_approvalwise_vectors: list[Approv
         yield new_reference_approvalwise_vectors, new_heuristic_approvalwise_vectors
 
         report_row = (i_generated, reference_distance,
-                      reference_distance, None, None, dt, 'reference')
+                      reference_distance, -1, -1, dt, 'reference')
         csv_report_out.write(','.join(map(str, report_row)) + '\n')
 
         new_approvalwise_vectors = None
