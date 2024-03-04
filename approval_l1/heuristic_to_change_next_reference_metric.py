@@ -10,14 +10,14 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--num_candidates", type=int, default=20)
-    parser.add_argument("--num_voters", type=int, default=50)
-    parser.add_argument("--num_instances", type=int, default=5*5)
-    parser.add_argument("--num_new_instances", type=int, default=3)
+    parser.add_argument("--num_candidates", type=int, default=30)
+    parser.add_argument("--num_voters", type=int, default=60)
+    parser.add_argument("--num_instances", type=int, default=7*7)
+    parser.add_argument("--num_new_instances", type=int, default=8)
     parser.add_argument("--family", type=str, default="euclidean")
     parser.add_argument("--algorithm", type=str, default="basin_hopping")
     parser.add_argument("--reference_algorithm", type=str, default='gurobi')
-    parser.add_argument("--num_trials", type=int, default=3)
+    parser.add_argument("--num_trials", type=int, default=10)
     parser.add_argument("--save_results", action="store_true")
 
     args = parser.parse_args()
