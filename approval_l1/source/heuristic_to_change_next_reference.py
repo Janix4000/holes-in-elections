@@ -21,7 +21,7 @@ def measure_iteration(approvalwise_vectors: list[ApprovalwiseVector], algorithm:
 
 def heuristic_to_change_next_reference(initial_approvalwise_vectors: list[ApprovalwiseVector],
                                        reference_algorithm: Algorithm, heuristic_algorithm: Algorithm,
-                                       num_generated: int, csv_report_out: typing.TextIO, num_trials: int = 1):
+                                       num_generated: int, csv_report_out: typing.TextIO, num_trials: int = 1, **heuristic_kwargs):
 
     approvalwise_vectors = initial_approvalwise_vectors[:]
     new_reference_approvalwise_vectors = []
@@ -50,7 +50,7 @@ def heuristic_to_change_next_reference(initial_approvalwise_vectors: list[Approv
             trial_approvalwise_vectors = approvalwise_vectors[:]
             while True:
                 new_heuristic_approvalwise_vector, heuristic_distance, dt = measure_iteration(
-                    trial_approvalwise_vectors, heuristic_algorithm)
+                    trial_approvalwise_vectors, heuristic_algorithm, **heuristic_kwargs)
 
                 if i_trial == num_trials - 1:
                     new_heuristic_approvalwise_vectors.append(

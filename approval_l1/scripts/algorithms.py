@@ -16,7 +16,7 @@ def _basin_hopping_step(approvalwise_vectors, **kwargs):
         approvalwise_vectors=approvalwise_vectors,
         step_size=7,
         big_step_chance=0.2,
-        x0='step_vector',
+        x0='mix',
         **kwargs
     )
 

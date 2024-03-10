@@ -51,8 +51,13 @@ def main():
     approvalwise_vectors = get_approvalwise_vectors(
         experiment.elections)
 
-    for new_reference_approvalwise_vectors, new_heuristics_approvalwise_vectors in heuristic_to_change_next_reference(
-            approvalwise_vectors, reference_algorithm, heuristic_algorithm, num_new_instances,  csv_report_out=csv_report_out, num_trials=num_trials):
+    heuristic_kwargs = {}
+
+    experiment_results = heuristic_to_change_next_reference(
+        approvalwise_vectors, reference_algorithm, heuristic_algorithm, num_new_instances,
+        csv_report_out=csv_report_out, num_trials=num_trials, **heuristic_kwargs)
+
+    for new_reference_approvalwise_vectors, new_heuristics_approvalwise_vectors in experiment_results:
         if save_results:
             if new_reference_approvalwise_vectors:
                 with open(os.path.join(results_dir, "new_reference_approvalwise_vectors.txt"), 'w') as out_file:

@@ -10,7 +10,7 @@ from scripts.approvalwise_vector import ApprovalwiseVector, get_approvalwise_vec
 
 def __find_best_starting_step_vector(approvalwise_vectors: list[ApprovalwiseVector],
                                      first_candidates: list[ApprovalwiseVector] | None = None) -> ApprovalwiseVector:
-    first_candidates = first_candidates or []
+    first_candidates = first_candidates if first_candidates is not None else []
     num_candidates = approvalwise_vectors[0].num_candidates
     num_voters = approvalwise_vectors[0].num_voters
     candidates = np.ones((num_candidates + 1, num_candidates)) * num_voters
@@ -36,7 +36,7 @@ def __sample_approvalwise_vector_with_resampling(num_voters: int, num_candidates
 def __random_approvalwise_vector(num_voters: int, num_candidates: int, rng, tries=10):
     x0_vector = rng.integers(
         0, num_voters, size=(tries, num_candidates))
-    x0_vector[::-1].sort(axis=1)
+    x0_vector[:, ::-1].sort(axis=1)
     return x0_vector
 
 
@@ -93,7 +93,7 @@ def basin_hopping(
         case 'mix':
             candidates = rng.integers(
                 0, num_voters, size=(20, num_candidates))
-            candidates[::-1].sort(axis=1)
+            candidates[:, ::-1].sort(axis=1)
             x0_vector = __find_best_starting_step_vector(
                 approvalwise_vectors, candidates)
         case _:
