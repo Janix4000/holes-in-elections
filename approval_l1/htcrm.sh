@@ -11,8 +11,8 @@ args_list_1=(
 
 args_list_2=(
     "basin_hopping"
-    "greedy_dp"
-    "pairs"
+    # "greedy_dp"
+    # "pairs"
     # Add more arguments as needed
 )
 
