@@ -4,6 +4,8 @@ import pickle
 import mapel.elections as mapel
 import numpy as np
 
+from scripts.approvalwise_vector import dump_to_text_file, get_approvalwise_vectors
+
 
 def generate(num_candidates: int, num_voters: int, num_instances: int, family_id: str) -> mapel.ApprovalElectionExperiment:
     size_id = f'{num_candidates}x{num_voters}'
@@ -115,6 +117,10 @@ def main():
     os.makedirs(experiments_path, exist_ok=True)
     with open(os.path.join(experiments_path, 'elections.pkl'), 'wb') as file:
         pickle.dump(experiment.elections, file)
+
+    with open(os.path.join(experiments_path, 'elections.txt'), 'w') as file:
+        approvalwise_vectors = get_approvalwise_vectors(experiment.elections)
+        dump_to_text_file(approvalwise_vectors, file)
 
 
 if __name__ == "__main__":
