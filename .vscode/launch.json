@@ -6,14 +6,14 @@
   "configurations": [
     {
       "name": "Python: Current File",
-      "type": "python",
+      "type": "debugpy",
       "request": "launch",
       "program": "${file}",
       "console": "integratedTerminal",
       "justMyCode": true,
       "args": [
-        "--num_instances",
-        "10"
+        "--file",
+        "experiments/30x60/noise/elections.txt"
       ],
       "cwd": "${workspaceFolder}/approval_l1/"
     },

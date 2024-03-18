@@ -80,7 +80,7 @@ def load_from_text_file(file) -> dict[str, ApprovalwiseVector]:
     approvalwise_vectors = {}
     for _ in range(num_elections):
         line = file.readline().strip().split()
-        instance_id = line[0]
+        instance_id = int(line[0])
         vector = np.array([int(x) for x in line[1:]])
         approvalwise_vectors[instance_id] = ApprovalwiseVector(
             vector, num_voters)
