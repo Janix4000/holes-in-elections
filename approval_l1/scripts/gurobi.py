@@ -1,6 +1,10 @@
 import argparse
 import time
+from typing import Optional
 
+import numpy as np
+
+from scripts.sampling_methods import find_best_starting_step_vector
 from scripts.approvalwise_vector import ApprovalwiseVector
 
 try:
@@ -12,7 +16,7 @@ except ImportError:
     )
 
 
-def gurobi_ilp(approvalwise_vectors: list[ApprovalwiseVector], max_dist: int = None) -> tuple[ApprovalwiseVector, int]:
+def gurobi_ilp(approvalwise_vectors: list[ApprovalwiseVector], max_dist: int = None, x0: Optional[ApprovalwiseVector] = None, seed: Optional[int] = None) -> tuple[ApprovalwiseVector, int]:
     """# Summary
     Generates farthest approvalwise vector from the given approvalwise vectors.
 
@@ -21,13 +25,17 @@ def gurobi_ilp(approvalwise_vectors: list[ApprovalwiseVector], max_dist: int = N
     Number of gurobi constraints: `num_candidates` + 2 * `num_elections` * `num_candidates` + `num_elections` + 2
 
     ## Args:
-        `approvalwise_vectors` (list[ApprovalwiseVector]): List of approvalwise vectors/elections, where each approvalwise vector is a list of non 
-        decreasing integers in range [0, `num_voters`].
+        `approvalwise_vectors` (list[ApprovalwiseVector]): List of approvalwise vectors/elections, where each
+        approvalwise vector is a list of non decreasing integers in range [0, `num_voters`].
 
-        `max_dist` (int, optional): Maximum possible distance that can be obtained. Usually set to the previous farthest distance. Defaults to `None`.
+        `max_dist` (int, optional): Maximum possible distance that can be obtained. Usually set to the previous farthest
+        distance. Defaults to `None`.
+
+        `x0` (Optional[ApprovalwiseVector], optional): Initial point for Gurobi algorithm. Defaults to `None`.
 
     ## Returns:
-        -> tuple[ApprovalwiseVector, int]: Farthest approvalwise vector and its distance from given approvalwise vectors.
+        -> tuple[ApprovalwiseVector, int]: Farthest approvalwise vector and its distance from given approvalwise
+        vectors.
 
     ## Examples
     """
@@ -70,6 +78,15 @@ def gurobi_ilp(approvalwise_vectors: list[ApprovalwiseVector], max_dist: int = N
 
     model.setObjective(min_constr, GRB.MAXIMIZE)
 
+    if x0 is None:
+        rng = np.random.default_rng(seed)
+        candidates = rng.integers(
+            0, num_voters, size=(20, num_candidates))
+        candidates[:, ::-1].sort(axis=1)
+        x0 = find_best_starting_step_vector(
+            approvalwise_vectors, candidates)
+    for i in range(num_candidates):
+        fav[i].Start = x0[i]
     model.optimize()
 
     vector = [int(fav[i].X) for i in range(num_candidates)]

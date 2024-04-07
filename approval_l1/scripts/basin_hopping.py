@@ -4,44 +4,8 @@ import numpy as np
 from scipy.optimize import basinhopping
 import math
 import argparse
-import mapel.elections as mapel
-from scripts.approvalwise_vector import ApprovalwiseVector, get_approvalwise_vector
-
-
-def __find_best_starting_step_vector(approvalwise_vectors: list[ApprovalwiseVector],
-                                     first_candidates: list[ApprovalwiseVector] | None = None) -> ApprovalwiseVector:
-    first_candidates = first_candidates if first_candidates is not None else []
-    num_candidates = approvalwise_vectors[0].num_candidates
-    num_voters = approvalwise_vectors[0].num_voters
-    candidates = np.ones((num_candidates + 1, num_candidates)) * num_voters
-    for i in range(num_candidates):
-        candidates[i, i:] = 0
-    candidates = list(candidates) + list(first_candidates)
-    distances = np.array(
-        [__distance_across(np.array(approvalwise_vectors), x) for x in candidates])
-    return candidates[distances.argmax()]
-
-
-def __sample_approvalwise_vector_with_resampling(num_voters: int, num_candidates: int, rng):
-    p, phi = rng.random(2)
-    election = mapel.generate_approval_election(
-        num_candidates=num_candidates,
-        num_voters=num_voters,
-        culture_id='resampling',
-        params={'p': p, 'phi': phi}
-    )
-    return get_approvalwise_vector(election)
-
-
-def __random_approvalwise_vector(num_voters: int, num_candidates: int, rng, tries=10):
-    x0_vector = rng.integers(
-        0, num_voters, size=(tries, num_candidates))
-    x0_vector[:, ::-1].sort(axis=1)
-    return x0_vector
-
-
-def __distance_across(approvalwise_vectors: np.ndarray, x: ApprovalwiseVector) -> int:
-    return np.sum(np.abs(approvalwise_vectors - x), axis=1).min()
+from scripts.sampling_methods import distance_across, find_best_starting_step_vector, random_approvalwise_vector, sample_approvalwise_vector_with_resampling
+from scripts.approvalwise_vector import ApprovalwiseVector
 
 
 def __to_int(x):
@@ -83,18 +47,18 @@ def basin_hopping(
     x0_vector: np.ndarray = None
     match x0:
         case 'random':
-            x0_vector = __random_approvalwise_vector(
+            x0_vector = random_approvalwise_vector(
                 num_voters, num_candidates, rng)
         case 'random_resampling':
-            x0_vector = __sample_approvalwise_vector_with_resampling(
+            x0_vector = sample_approvalwise_vector_with_resampling(
                 num_voters, num_candidates, rng)
         case 'step_vector':
-            x0_vector = __find_best_starting_step_vector(approvalwise_vectors)
+            x0_vector = find_best_starting_step_vector(approvalwise_vectors)
         case 'mix':
             candidates = rng.integers(
                 0, num_voters, size=(20, num_candidates))
             candidates[:, ::-1].sort(axis=1)
-            x0_vector = __find_best_starting_step_vector(
+            x0_vector = find_best_starting_step_vector(
                 approvalwise_vectors, candidates)
         case _:
             x0_vector = np.array(x0)
@@ -110,7 +74,7 @@ def basin_hopping(
     def f(x):
         nonlocal approvalwise_vectors
         x = __to_int(x)
-        d = -__distance_across(approvalwise_vectors, x[:-2])
+        d = -distance_across(approvalwise_vectors, x[:-2])
         return d
 
     def unit_step(x):
