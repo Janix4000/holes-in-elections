@@ -1,8 +1,8 @@
 import os
 import sys
 from source.how_long_reference_is_better import how_long_reference_is_better, measure_iteration
-from scripts.algorithms import Algorithm, algorithms
-from scripts.approvalwise_vector import ApprovalwiseVector, dump_to_text_file, get_approvalwise_vectors
+from scripts.algorithms import algorithms
+from scripts.approvalwise_vector import dump_to_text_file, get_approvalwise_vectors, load_from_text_file
 import generate_elections
 
 
@@ -52,12 +52,31 @@ def main():
     reference_algorithm_name = args.reference_algorithm
     save_results = args.save_results
 
+    if load_from_file:
+        with open(load_from_file, 'r') as in_file:
+            approvalwise_vectors = load_from_text_file(
+                in_file)
+        approvalwise_vectors = list(approvalwise_vectors.values())
+        num_candidates = approvalwise_vectors[0].num_candidates
+        num_voters = approvalwise_vectors[0].num_voters
+        num_instances = len(approvalwise_vectors)
+
+    else:
+        print("Generating elections")
+        experiment = generate_elections.generate(
+            num_candidates, num_voters, num_instances, family)
+        approvalwise_vectors = get_approvalwise_vectors(
+            experiment.elections)
+        num_candidates = approvalwise_vectors[0].num_candidates
+        print("Generated elections")
+
     if save_results:
         results_dir = os.path.join(
             'results', 'how_long_heuristic_is_better', f'{num_candidates}x{num_voters}', algorithm_name, family)
         os.makedirs(results_dir, exist_ok=True)
         csv_report_out = open(os.path.join(results_dir, "report.csv"), 'a')
     else:
+        print("Using stdout as output")
         csv_report_out = sys.stdout
 
     csv_report_columns = ['trial', 'iteration', 'distance',
@@ -67,24 +86,18 @@ def main():
     heuristic_algorithm = algorithms[algorithm_name]
     reference_algorithm = algorithms[reference_algorithm_name] if reference_algorithm_name is not None else None
 
-    if load_from_file:
-        with open(load_from_file, 'r') as in_file:
-            approvalwise_vectors = ApprovalwiseVector.load_from_text_file(
-                in_file)
-    else:
-        experiment = generate_elections.generate(
-            num_candidates, num_voters, num_instances, family)
-        approvalwise_vectors = get_approvalwise_vectors(
-            experiment.elections)
-
     if reference_load_from_file:
         with open(reference_load_from_file, 'r') as in_file:
-            reference_approvalwise_vectors = ApprovalwiseVector.load_from_text_file(
+            reference_approvalwise_vectors = load_from_text_file(
                 in_file)
+            reference_approvalwise_vectors = list(
+                reference_approvalwise_vectors.values())
         reference_approvalwise_vectors = reference_approvalwise_vectors[:num_reference_instances]
     else:
+        print("Generating reference approvalwise vectors")
         reference_approvalwise_vectors = generate_reference_approvalwise_vectors(
             approvalwise_vectors, reference_algorithm, num_reference_instances, csv_report_out)
+        print("Reference:", reference_approvalwise_vectors)
 
     heuristic_kwargs = {}
 

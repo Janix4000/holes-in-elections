@@ -1,8 +1,5 @@
 import argparse
 import os
-import pickle
-import mapel.elections as mapel
-import numpy as np
 
 from scripts.gurobi import gurobi_ilp
 from scripts.approvalwise_vector import dump_to_text_file, load_from_text_file
@@ -26,7 +23,10 @@ def main():
     num_instances = args.num_instances
 
     with open(filepath, 'r') as file:
-        approvalwise_vectors = load_from_text_file(file)
+        approvalwise_vectors = list(load_from_text_file(file).values())
+
+    dirpath = os.path.dirname(filepath)
+    ref_filepath = os.path.join(dirpath, 'reference.txt')
 
     last_distance = None
     reference_app_vecs = []
@@ -34,12 +34,10 @@ def main():
         app_vec, dist = gurobi_ilp(
             approvalwise_vectors, max_dist=last_distance)
         reference_app_vecs.append(app_vec)
+        approvalwise_vectors.append(app_vec)
+        with open(ref_filepath, 'w') as file:
+            dump_to_text_file(reference_app_vecs, file)
         print(f'{i},{dist}')
-
-    dirpath = os.path.dirname(filepath)
-    filename = os.path.join(dirpath, 'reference.txt')
-    with open(filename, 'w') as file:
-        dump_to_text_file(reference_app_vecs, file)
 
 
 if __name__ == "__main__":
