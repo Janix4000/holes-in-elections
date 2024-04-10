@@ -72,7 +72,7 @@ def main():
 
     if save_results:
         results_dir = os.path.join(
-            'results', 'how_long_heuristic_is_better', f'{num_candidates}x{num_voters}', algorithm_name, family)
+            'results', 'how_long_heuristic_is_better', f'{num_candidates}x{num_voters}_{num_reference_instances}', algorithm_name, family)
         os.makedirs(results_dir, exist_ok=True)
         csv_report_out = open(os.path.join(results_dir, "report.csv"), 'a')
     else:
@@ -92,7 +92,8 @@ def main():
                 in_file)
             reference_approvalwise_vectors = list(
                 reference_approvalwise_vectors.values())
-        reference_approvalwise_vectors = reference_approvalwise_vectors[:num_reference_instances]
+        reference_approvalwise_vectors = reference_approvalwise_vectors[:num_reference_instances] if num_reference_instances <= len(
+            reference_approvalwise_vectors) else reference_approvalwise_vectors
     else:
         print("Generating reference approvalwise vectors")
         reference_approvalwise_vectors = generate_reference_approvalwise_vectors(
