@@ -16,6 +16,10 @@ def find_best_starting_step_vector(approvalwise_vectors: list[ApprovalwiseVector
     for i in range(num_candidates):
         candidates[i, i:] = 0
     candidates = list(candidates) + list(first_candidates)
+    return find_best_vector(approvalwise_vectors, candidates)
+
+
+def find_best_vector(approvalwise_vectors: list[ApprovalwiseVector], candidates: list[ApprovalwiseVector]) -> ApprovalwiseVector:
     distances = np.array(
         [distance_across(np.array(approvalwise_vectors), x) for x in candidates])
     return candidates[distances.argmax()]
@@ -32,7 +36,7 @@ def sample_approvalwise_vector_with_resampling(num_voters: int, num_candidates: 
     return get_approvalwise_vector(election)
 
 
-def random_approvalwise_vector(num_voters: int, num_candidates: int, rng, tries=10):
+def random_approvalwise_vectors(num_voters: int, num_candidates: int, rng, tries=10):
     x0_vector = rng.integers(
         0, num_voters, size=(tries, num_candidates))
     x0_vector[:, ::-1].sort(axis=1)

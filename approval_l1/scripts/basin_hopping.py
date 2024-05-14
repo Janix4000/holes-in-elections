@@ -4,7 +4,7 @@ import numpy as np
 from scipy.optimize import basinhopping
 import math
 import argparse
-from scripts.sampling_methods import distance_across, find_best_starting_step_vector, random_approvalwise_vector, sample_approvalwise_vector_with_resampling
+from scripts.sampling_methods import distance_across, find_best_starting_step_vector, find_best_vector, random_approvalwise_vectors, sample_approvalwise_vector_with_resampling
 from scripts.approvalwise_vector import ApprovalwiseVector
 
 
@@ -47,8 +47,10 @@ def basin_hopping(
     x0_vector: np.ndarray = None
     match x0:
         case 'random':
-            x0_vector = random_approvalwise_vector(
+            random_candidates = random_approvalwise_vectors(
                 num_voters, num_candidates, rng)
+            x0_vector = find_best_vector(
+                approvalwise_vectors, random_candidates)
         case 'random_resampling':
             x0_vector = sample_approvalwise_vector_with_resampling(
                 num_voters, num_candidates, rng)
