@@ -3,7 +3,7 @@ import pandas as pd
 import os
 import numpy as np
 import pickle
-from scripts.approvalwise_vector import get_approvalwise_vectors, dump_to_text_file
+from scripts.approvalwise_vector import ApprovalwiseVector, get_approvalwise_vectors, dump_to_text_file
 from scripts.algorithms import algorithms
 
 from itertools import product
@@ -15,16 +15,20 @@ num_voters = 100
 reference_algorithm_id = 'gurobi'
 
 family_ids = ['euclidean']
-heuristic_ids = ['basin_hopping', 'basin_hopping_random', 'pairs', 'greedy_dp']
+# heuristic_ids = ['pairs', 'greedy_dp']
+heuristic_ids = ['basin_hopping_random']  # , 'pairs', 'greedy_dp']
 i_starts = range(0, 13 + 1)
-i_trials = range(10)
+i_trials = range(13)
 
 experiment_id = f'{num_candidates}x{num_voters}'
 report_rows = []
 csv_report_path = os.path.join(
     'results', experiment_id, f'space_filling_report.csv')
 
-for family_id, algorithm_id, i_start, i_trial in product(family_ids, heuristic_ids, i_starts, i_trials):
+experiment_configurations = product(
+    family_ids, heuristic_ids, i_starts, i_trials)
+
+for family_id, algorithm_id, i_start, i_trial in experiment_configurations:
     print(f'Start {family_id} {algorithm_id} {i_start} {i_trial}')
 
     results_dir = os.path.join('results', experiment_id, family_id)
@@ -37,8 +41,8 @@ for family_id, algorithm_id, i_start, i_trial in product(family_ids, heuristic_i
 
     with open(os.path.join(results_dir, reference_algorithm_id, 'new-approvalwise-vectors.pkl'), 'rb') as f:
         reference_new_approvalwise_vectors = pickle.load(f)
-        reference_new_approvalwise_vectors = list(
-            reference_new_approvalwise_vectors.values())
+        reference_new_approvalwise_vectors = list(map(lambda x: ApprovalwiseVector(list(sorted(x, reverse=True)), num_voters),
+                                                      reference_new_approvalwise_vectors.values()))
 
     algorithm = algorithms[algorithm_id]
     starting_approval_vectors = approvalwise_vectors + \
