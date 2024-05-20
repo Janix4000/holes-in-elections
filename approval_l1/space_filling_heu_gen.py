@@ -6,7 +6,7 @@ import pickle
 from scripts.approvalwise_vector import ApprovalwiseVector, get_approvalwise_vectors, dump_to_text_file
 from scripts.algorithms import algorithms
 
-from itertools import product
+from itertools import product, chain
 
 i_start = 0
 
@@ -25,8 +25,12 @@ report_rows = []
 csv_report_path = os.path.join(
     'results', experiment_id, f'space_filling_report.csv')
 
-experiment_configurations = product(
-    family_ids, heuristic_ids, i_starts, i_trials)
+experiment_configurations = chain(
+    product(family_ids, ['basin_hopping',
+            'basin_hopping_random'], i_starts, i_trials),
+    product(family_ids, ['pairs', 'greedy_dp'],
+            i_starts, range(1)),
+)
 
 for family_id, algorithm_id, i_start, i_trial in experiment_configurations:
     print(f'Start {family_id} {algorithm_id} {i_start} {i_trial}')
