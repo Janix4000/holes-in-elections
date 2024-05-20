@@ -26,7 +26,7 @@ parser.add_argument('--family', type=str,
 parser.add_argument('--save', type=bool, default=True, help='Save the plot')
 parser.add_argument('--lb', type=int, help='Plot y-axis lower bound')
 
-i_start = 7
+i_start = 3
 
 args = parser.parse_args()
 
@@ -59,18 +59,12 @@ def l1_distance(av, other_avs) -> int:
     return np.min(np.sum(np.abs(av - other_avs), axis=1))
 
 
-def calculate_space_filling_metric(algorithm: str):
-    if os.path.exists(os.path.join(results_dir, algorithm, 'new-approvalwise-vectors.pkl')):
-        with open(os.path.join(results_dir, algorithm, 'new-approvalwise-vectors.pkl'), 'rb') as f:
-            new_approvalwise_vectors = pickle.load(f)
-    else:
-        with open(os.path.join(results_dir, algorithm, f'new_approvalwise_vectors_{i_start}.txt'), 'r') as f:
-            new_approvalwise_vectors = load_from_text_file(f)
+def calculate_space_filling_metric_reference(algorithm: str):
+    with open(os.path.join(results_dir, algorithm, 'new-approvalwise-vectors.pkl'), 'rb') as f:
+        new_approvalwise_vectors = pickle.load(f)
 
-    vectors = list(new_approvalwise_vectors.values() if isinstance(
-        new_approvalwise_vectors, dict) else new_approvalwise_vectors)
-    vectors = vectors[-i_start:]
-
+    vectors = list(new_approvalwise_vectors.values())
+    vectors = vectors[i_start:]
     metrics = []
 
     for i in range(len(vectors)):
@@ -79,24 +73,66 @@ def calculate_space_filling_metric(algorithm: str):
              for j, vector in enumerate(vectors[:i+1])]
         )
         metrics.append(metric)
-        # break
 
     return metrics
 
 
+def calculate_space_filling_metric_heuristic(algorithm: str, trials: int = 1):
+    trial_metrics = []
+    for i_trial in range(trials):
+        dirpath = os.path.join(results_dir, algorithm, f'start_{i_start}')
+        with open(os.path.join(dirpath, f'new_approvalwise_vectors_trial_{i_trial}.txt'), 'r') as f:
+            new_approvalwise_vectors = load_from_text_file(f)
+
+        vectors = list(new_approvalwise_vectors.values())
+        metrics = []
+
+        for i in range(len(vectors)):
+            metric = np.mean(
+                [l1_distance(vector, approvalwise_vectors + vectors[:j] + vectors[j+1:i+1])
+                 for j, vector in enumerate(vectors[:i+1])]
+            )
+            metrics.append(metric)
+        trial_metrics.append(metrics)
+    return trial_metrics
+
+
 metrics_rows = []
 
-for algorithm in ['gurobi', 'basin_hopping', 'basin_hopping_random', 'pairs', 'greedy_dp']:
-    metrics = calculate_space_filling_metric(algorithm)
-    metrics_rows.extend(
-        [[algorithm, i + i_start, metric] for i, metric in enumerate(metrics)]
-    )
+heuristics_trials = [
+    ('basin_hopping', 10),
+    ('basin_hopping_random', 10),
+    ('pairs', 1),
+    ('greedy_dp', 1)
+]
+algorithm_labels = {
+    'gurobi': 'Gurobi ILP',
+    'basin_hopping': 'Basin Hopping',
+    'basin_hopping_random': 'Basin Hopping Random',
+    'pairs': 'Pairs',
+    'greedy_dp': 'Greedy DP'
+}
 
-metrics_df = pd.DataFrame(metrics_rows, columns=['algorithm', 'i', 'metric'])
+for algorithm, trials in heuristics_trials:
+    trial_metrics = calculate_space_filling_metric_heuristic(algorithm, trials)
+    metrics_flatten = [[algorithm_labels[algorithm], i + i_start, metric, trial]
+                       for trial, metrics in enumerate(trial_metrics) for i, metric in enumerate(metrics)]
+    metrics_rows.extend(metrics_flatten)
+
+
+rows = calculate_space_filling_metric_reference(reference_algorithm)
+metrics_rows.extend(
+    [[algorithm_labels[reference_algorithm], i + i_start, metric, 1]
+        for i, metric in enumerate(rows)]
+)
+
+metrics_df = pd.DataFrame(metrics_rows, columns=[
+                          'Algorithm', 'i', 'metric', 'trial'])
+
+
 fig, ax = plt.subplots()
 ax = barplot(data=metrics_df, x='i', y='metric',
-             hue='algorithm', ax=ax)
-# ax.set_yscale("log")
+             hue='Algorithm', ax=ax)
 
 if save:
     os.makedirs(plot_dir, exist_ok=True)
