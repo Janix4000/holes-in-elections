@@ -8,15 +8,11 @@ from scripts.algorithms import algorithms
 
 from itertools import product, chain
 
-i_start = 0
-
 num_candidates = 30
 num_voters = 100
 reference_algorithm_id = 'gurobi'
 
 family_ids = ['euclidean']
-# heuristic_ids = ['pairs', 'greedy_dp']
-heuristic_ids = ['basin_hopping_random']  # , 'pairs', 'greedy_dp']
 i_starts = range(0, 13 + 1)
 i_trials = range(13)
 
