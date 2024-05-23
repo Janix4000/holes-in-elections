@@ -26,8 +26,6 @@ parser.add_argument('--family', type=str,
 parser.add_argument('--save', type=bool, default=True, help='Save the plot')
 parser.add_argument('--lb', type=int, help='Plot y-axis lower bound')
 
-i_start = 3
-
 args = parser.parse_args()
 
 reference_algorithm = args.reference_solver_id
@@ -46,6 +44,8 @@ plot_dir = os.path.join('plots', experiment_id)
 
 with open(os.path.join(results_dir, reference_algorithm, 'new-approvalwise-vectors.pkl'), 'rb') as f:
     reference_new_approvalwise_vectors = pickle.load(f)
+    reference_new_approvalwise_vectors = list(
+        reference_new_approvalwise_vectors.values())
 
 with open(os.path.join('experiments', experiment_id, 'elections.pkl'), 'rb') as file:
     meaningful_elections = pickle.load(file)
@@ -59,7 +59,7 @@ def l1_distance(av, other_avs) -> int:
     return np.min(np.sum(np.abs(av - other_avs), axis=1))
 
 
-def calculate_space_filling_metric_reference(algorithm: str):
+def calculate_space_filling_metric_reference(algorithm: str, i_start: int):
     with open(os.path.join(results_dir, algorithm, 'new-approvalwise-vectors.pkl'), 'rb') as f:
         new_approvalwise_vectors = pickle.load(f)
 
@@ -77,7 +77,7 @@ def calculate_space_filling_metric_reference(algorithm: str):
     return metrics
 
 
-def calculate_space_filling_metric_heuristic(algorithm: str, trials: int = 1):
+def calculate_space_filling_metric_heuristic(algorithm: str, i_start: int, trials: int = 1):
     trial_metrics = []
     for i_trial in range(trials):
         dirpath = os.path.join(results_dir, algorithm, f'start_{i_start}')
@@ -85,19 +85,18 @@ def calculate_space_filling_metric_heuristic(algorithm: str, trials: int = 1):
             new_approvalwise_vectors = load_from_text_file(f)
 
         vectors = list(new_approvalwise_vectors.values())
+        reference_vectors = reference_new_approvalwise_vectors[:i_start]
         metrics = []
 
         for i in range(len(vectors)):
             metric = np.mean(
-                [l1_distance(vector, approvalwise_vectors + vectors[:j] + vectors[j+1:i+1])
+                [l1_distance(vector, approvalwise_vectors + reference_vectors + vectors[:j] + vectors[j+1:i+1])
                  for j, vector in enumerate(vectors[:i+1])]
             )
             metrics.append(metric)
         trial_metrics.append(metrics)
     return trial_metrics
 
-
-metrics_rows = []
 
 heuristics_trials = [
     ('basin_hopping', 10),
@@ -113,32 +112,53 @@ algorithm_labels = {
     'greedy_dp': 'Greedy DP'
 }
 
-for algorithm, trials in heuristics_trials:
-    trial_metrics = calculate_space_filling_metric_heuristic(algorithm, trials)
-    metrics_flatten = [[algorithm_labels[algorithm], i + i_start, metric, trial]
-                       for trial, metrics in enumerate(trial_metrics) for i, metric in enumerate(metrics)]
-    metrics_rows.extend(metrics_flatten)
+i_starts = [0, 3, 5, 7]
+draw_legend = [False, False, False, True]
+draw_xlabel = [False, False, True, True]
+draw_ylabel = [True, False, True, False]
 
+for i_start, legend, xlabel, ylabel in zip(i_starts, draw_legend, draw_xlabel, draw_ylabel):
+    metrics_rows = []
+    for algorithm, trials in heuristics_trials:
+        trial_metrics = calculate_space_filling_metric_heuristic(
+            algorithm, i_start, trials)
+        algorithm_label = algorithm_labels[algorithm]
+        metrics_flatten = [[algorithm_label, i + i_start, metric, trial]
+                           for trial, metrics in enumerate(trial_metrics) for i, metric in enumerate(metrics)]
+        metrics_rows.extend(metrics_flatten)
 
-rows = calculate_space_filling_metric_reference(reference_algorithm)
-metrics_rows.extend(
-    [[algorithm_labels[reference_algorithm], i + i_start, metric, 1]
-        for i, metric in enumerate(rows)]
-)
+    rows = calculate_space_filling_metric_reference(
+        reference_algorithm, i_start)
+    metrics_rows.extend(
+        [[algorithm_labels[reference_algorithm], i + i_start, metric, 1]
+            for i, metric in enumerate(rows)]
+    )
 
-metrics_df = pd.DataFrame(metrics_rows, columns=[
-                          'Algorithm', 'i', 'metric', 'trial'])
+    metrics_df = pd.DataFrame(metrics_rows, columns=[
+        'Algorithm', 'i', 'metric', 'trial'])
 
+    plt.rcParams.update({'font.size': 16})
+    fig, ax = plt.subplots()
+    ax = barplot(data=metrics_df, x='i', y='metric',
+                 hue='Algorithm', ax=ax, legend=legend)
+    if xlabel:
+        ax.set_xlabel("Next farthest vector's index", fontsize=20)
+    else:
+        ax.set_xlabel("")
 
-fig, ax = plt.subplots()
-ax = barplot(data=metrics_df, x='i', y='metric',
-             hue='Algorithm', ax=ax)
+    if ylabel:
+        ax.set_ylabel("Average Space Filling Metric", fontsize=20)
+    else:
+        ax.set_ylabel("")
 
-if save:
-    os.makedirs(plot_dir, exist_ok=True)
-    fig.savefig(os.path.join(
-        plot_dir, f'space_filling_{reference_algorithm}_{i_start}.png'))
-    print(
-        f"Saved space filling plot for {reference_algorithm} at {i_start} to {plot_dir}")
-else:
-    plt.show()
+    ax.tick_params(axis='both', which='major', labelsize=16)
+    fig.tight_layout()
+
+    if save:
+        os.makedirs(plot_dir, exist_ok=True)
+        fig.savefig(os.path.join(
+            plot_dir, f'space_filling_{reference_algorithm}_{i_start}.png'))
+        print(
+            f"Saved space filling plot for {reference_algorithm} at {i_start} to {plot_dir}")
+    else:
+        plt.show()
