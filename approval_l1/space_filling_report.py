@@ -18,13 +18,12 @@ parser.add_argument('--reference_solver_id', type=str,
 # parser.add_argument('--solver_id', type=str,
 #                     help='The ID of the solver used', required=True)
 parser.add_argument('--num_candidates', type=int,
-                    help='The number of candidates', default=30)
+                    help='The number of candidates', default=20)
 parser.add_argument('--num_voters', type=int,
-                    help='The number of voters', default=100)
+                    help='The number of voters', default=50)
 parser.add_argument('--family', type=str,
                     help='The family of elections', default='euclidean')
 parser.add_argument('--save', type=bool, default=True, help='Save the plot')
-parser.add_argument('--lb', type=int, help='Plot y-axis lower bound')
 
 args = parser.parse_args()
 
@@ -34,7 +33,6 @@ num_candidates = args.num_candidates
 num_voters = args.num_voters
 family_id = args.family
 save = args.save
-plot_lower_bound = args.lb
 
 
 experiment_id = f'{num_candidates}x{num_voters}/{family_id}'
@@ -42,14 +40,14 @@ experiment_id = f'{num_candidates}x{num_voters}/{family_id}'
 results_dir = os.path.join('results', experiment_id)
 plot_dir = os.path.join('plots', experiment_id)
 
-with open(os.path.join(results_dir, reference_algorithm, 'new-approvalwise-vectors.pkl'), 'rb') as f:
-    reference_new_approvalwise_vectors = pickle.load(f)
-    reference_new_approvalwise_vectors = list(
-        reference_new_approvalwise_vectors.values())
+with open(os.path.join(results_dir, reference_algorithm, 'new-approvalwise-vectors.txt'), 'r') as file:
+    reference_new_approvalwise_vectors = load_from_text_file(file)
+reference_new_approvalwise_vectors = list(
+    reference_new_approvalwise_vectors.values())
 
-with open(os.path.join('experiments', experiment_id, 'elections.pkl'), 'rb') as file:
-    meaningful_elections = pickle.load(file)
-approvalwise_vectors = get_approvalwise_vectors(meaningful_elections)
+with open(os.path.join('experiments', experiment_id, 'elections.txt'), 'r') as file:
+    approvalwise_vectors = load_from_text_file(file)
+approvalwise_vectors = list(approvalwise_vectors.values())
 
 
 def l1_distance(av, other_avs) -> int:
@@ -60,8 +58,8 @@ def l1_distance(av, other_avs) -> int:
 
 
 def calculate_space_filling_metric_reference(algorithm: str, i_start: int):
-    with open(os.path.join(results_dir, algorithm, 'new-approvalwise-vectors.pkl'), 'rb') as f:
-        new_approvalwise_vectors = pickle.load(f)
+    with open(os.path.join(results_dir, algorithm, 'new-approvalwise-vectors.txt'), 'r') as file:
+        new_approvalwise_vectors = load_from_text_file(file)
 
     vectors = list(new_approvalwise_vectors.values())
     vectors = vectors[i_start:]

@@ -11,7 +11,16 @@
       "program": "${file}",
       "console": "integratedTerminal",
       "justMyCode": true,
-      "args": [],
+      "args": [
+        "--num_candidates",
+        "20", 
+        "--num_voters",
+        "50",
+        "--family",
+        "noise",
+        "--save",
+        "1"
+      ],
       "cwd": "${workspaceFolder}/approval_l1/"
     },
     {

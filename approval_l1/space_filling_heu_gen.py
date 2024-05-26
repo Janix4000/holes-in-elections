@@ -3,18 +3,18 @@ import pandas as pd
 import os
 import numpy as np
 import pickle
-from scripts.approvalwise_vector import ApprovalwiseVector, get_approvalwise_vectors, dump_to_text_file
+from scripts.approvalwise_vector import ApprovalwiseVector, get_approvalwise_vectors, dump_to_text_file, load_from_text_file
 from scripts.algorithms import algorithms
 
 from itertools import product, chain
 
-num_candidates = 30
-num_voters = 100
+num_candidates = 20
+num_voters = 50
 reference_algorithm_id = 'gurobi'
 
-family_ids = ['euclidean']
-i_starts = range(0, 13 + 1)
-i_trials = range(13)
+family_ids = ['noise', 'resampling', 'truncated_urn']
+i_starts = range(0, 12)
+i_trials = range(10)
 
 experiment_id = f'{num_candidates}x{num_voters}'
 report_rows = []
@@ -22,8 +22,8 @@ csv_report_path = os.path.join(
     'results', experiment_id, f'space_filling_report.csv')
 
 experiment_configurations = chain(
-    product(family_ids, ['basin_hopping',
-            'basin_hopping_random'], i_starts, i_trials),
+    product(family_ids[2:], ['basin_hopping'], i_starts, i_trials),
+    product(family_ids, ['basin_hopping_random'], i_starts, i_trials),
     product(family_ids, ['pairs', 'greedy_dp'],
             i_starts, range(1)),
 )
@@ -36,11 +36,12 @@ for family_id, algorithm_id, i_start, i_trial in experiment_configurations:
         results_dir, algorithm_id, f'start_{i_start}',  f'new_approvalwise_vectors_trial_{i_trial}.txt')
     os.makedirs(os.path.dirname(res_elections_path), exist_ok=True)
 
-    with open(os.path.join('experiments', experiment_id, family_id, 'elections.pkl'), 'rb') as file:
-        approvalwise_vectors = get_approvalwise_vectors(pickle.load(file))
+    with open(os.path.join('experiments', experiment_id, family_id, 'elections.txt'), 'r') as file:
+        approvalwise_vectors = load_from_text_file(file)
+        approvalwise_vectors = list(approvalwise_vectors.values())
 
-    with open(os.path.join(results_dir, reference_algorithm_id, 'new-approvalwise-vectors.pkl'), 'rb') as f:
-        reference_new_approvalwise_vectors = pickle.load(f)
+    with open(os.path.join(results_dir, reference_algorithm_id, 'new-approvalwise-vectors.txt'), 'r') as f:
+        reference_new_approvalwise_vectors = load_from_text_file(f)
         reference_new_approvalwise_vectors = list(map(lambda x: ApprovalwiseVector(list(sorted(x, reverse=True)), num_voters),
                                                       reference_new_approvalwise_vectors.values()))
 
