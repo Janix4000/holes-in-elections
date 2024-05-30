@@ -1,4 +1,4 @@
-from typing import Any, Iterable
+from typing import Iterable
 import mapel.elections as mapel
 import numpy as np
 
@@ -46,12 +46,13 @@ def sample_election_from_approvalwise_vector(approvalwise_vector: ApprovalwiseVe
 
 def add_sampled_elections_to_experiment(approvalwise_vectors: dir | Iterable[ApprovalwiseVector], experiment: mapel.ApprovalElectionExperiment, family_id: str, color: str, seed: int | None) -> None:
     experiment.add_empty_family(family_id=family_id, color=color)
+    size = sum(map(len, experiment.families))
     vectors = approvalwise_vectors.items() if isinstance(
         approvalwise_vectors, dict) else enumerate(approvalwise_vectors)
     for instance_id, approvalwise_vector in vectors:
         election = sample_election_from_approvalwise_vector(
             approvalwise_vector, seed=seed)
-        election.instance_id = str(instance_id)
+        election.instance_id = f'{instance_id}_{size}'
         experiment.add_election_to_family(election, family_id=family_id)
 
 
