@@ -3,7 +3,7 @@ import pandas as pd
 import os
 import numpy as np
 import pickle
-from scripts.approvalwise_vector import ApprovalwiseVector, get_approvalwise_vectors, dump_to_text_file, load_from_text_file
+from scripts.approvalwise_vector import ApprovalwiseVector, dump_to_text_file, load_from_text_file
 from scripts.algorithms import algorithms
 
 from itertools import product, chain
@@ -50,7 +50,7 @@ for family_id, algorithm_id, i_start, i_trial in experiment_configurations:
         reference_new_approvalwise_vectors[:i_start]
     new_approvalwise_vectors = []
 
-    for _ in range(i_start, len(reference_new_approvalwise_vectors)):
+    for i in range(i_start, len(reference_new_approvalwise_vectors)):
         time_start = time.time()
         farthest_vector, distance = algorithm(starting_approval_vectors)
         dt = time.time() - time_start
@@ -58,7 +58,7 @@ for family_id, algorithm_id, i_start, i_trial in experiment_configurations:
         starting_approval_vectors.append(farthest_vector)
         new_approvalwise_vectors.append(farthest_vector)
         report_rows.append(
-            [family_id, algorithm_id, i_start, i_trial, distance, dt])
+            [family_id, algorithm_id, i_start, i_trial, i, distance, dt])
 
     print(f'Done {family_id} {algorithm_id} {i_start} {i_trial}')
 
@@ -66,5 +66,5 @@ for family_id, algorithm_id, i_start, i_trial in experiment_configurations:
         dump_to_text_file(new_approvalwise_vectors, file)
 
     csv_report = pd.DataFrame(report_rows, columns=[
-                              'family', 'algorithm', 'i_start', 'i_trial', 'distance', 'dt'])
+                              'family', 'algorithm', 'i_start', 'i_trial', 'iteration', 'distance', 'dt'])
     csv_report.to_csv(csv_report_path, index=False)
