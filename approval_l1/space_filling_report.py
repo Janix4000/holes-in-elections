@@ -137,8 +137,8 @@ for i_start, legend, xlabel, ylabel in zip(i_starts, draw_legend, draw_xlabel, d
 
     plt.rcParams.update({'font.size': 16})
     fig, ax = plt.subplots()
-    ax = barplot(data=metrics_df, x='i', y='metric',
-                 hue='Algorithm', ax=ax, legend=legend)
+    ax = sns.lineplot(data=metrics_df, x='i', y='metric',
+                      hue='Algorithm', ax=ax, legend=legend, markers=True, dashes=True, style='Algorithm')
     if xlabel:
         ax.set_xlabel("Next farthest vector's index", fontsize=20)
     else:
