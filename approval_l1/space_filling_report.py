@@ -39,7 +39,8 @@ save = args.save
 experiment_id = f'{num_candidates}x{num_voters}/{family_id}'
 
 results_dir = os.path.join('results', experiment_id)
-plot_dir = os.path.join('plots', experiment_id)
+plot_dir = os.path.join('plots', experiment_id.replace('_', '-'))
+os.makedirs(plot_dir, exist_ok=True)
 
 with open(os.path.join(results_dir, reference_algorithm, 'new-approvalwise-vectors.txt'), 'r') as file:
     reference_new_approvalwise_vectors = load_from_text_file(file)
@@ -121,6 +122,8 @@ def prepare_experiment(num_voters: int, num_candidates: int) -> mapel.ApprovalEl
     return experiment
 
 
+plt.rcParams['figure.dpi'] = 300
+
 heuristics_trials = [
     ('basin_hopping', 10),
     ('basin_hopping_random', 10),
@@ -147,11 +150,11 @@ family_labels = {
     'noise': 'Noise',
     'resampling': 'Resampling'
 }
+palette = {label: algorithm_colors.get(
+    algo_id) for algo_id, label in algorithm_labels.items()}
 
 i_starts = [0, 3, 5, 7]
-draw_legend = [False, False, False, True]
-draw_xlabel = [False, False, True, True]
-draw_ylabel = [True, False, True, False]
+
 
 space_filling_report_df = pd.read_csv(
     os.path.join(results_dir, '..', 'space_filling_report.csv'))
@@ -170,7 +173,23 @@ if 'iteration' not in space_filling_report_df.columns:
         iterations.append(iteration)
     space_filling_report_df['iteration'] = iterations
 
-for i_start, legend, xlabel, ylabel in zip(i_starts, draw_legend, draw_xlabel, draw_ylabel):
+
+# Plot the plain map
+experiment = prepare_experiment(num_voters, num_candidates)
+add_compass(experiment)
+add_sampled_elections_to_experiment(
+    approvalwise_vectors, experiment, family_labels[family_id], color='cyan', seed=0)
+add_sampled_elections_to_experiment(
+    reference_new_approvalwise_vectors, experiment, 'Gurobi ILP', color='purple', seed=0)
+experiment.compute_distances(distance_id='l1-approvalwise')
+experiment.embed_2d(embedding_id="fr")
+map_filepath = os.path.join(
+    '..', plot_dir, f'space-filling-map.png')
+plt.rcParams.update({'font.size': 10})
+experiment.print_map_2d(legend=True, saveas=map_filepath, show=False)
+
+
+for i_start in i_starts:
 
     # Plot the space filling metric
     metrics_rows = []
@@ -189,18 +208,11 @@ for i_start, legend, xlabel, ylabel in zip(i_starts, draw_legend, draw_xlabel, d
     )
     metrics_df = pd.DataFrame(metrics_rows, columns=[
         'Algorithm', 'i', 'metric', 'trial'])
-    plt.rcParams.update({'font.size': 8})
     fig, ax = plt.subplots()
     ax = sns.lineplot(data=metrics_df, x='i', y='metric',
-                      hue='Algorithm', ax=ax, legend=legend, markers=True, dashes=True, style='Algorithm')
-    if xlabel:
-        ax.set_xlabel("Next farthest vector's index", fontsize=20)
-    else:
-        ax.set_xlabel("")
-    if ylabel:
-        ax.set_ylabel("Average Space Filling Metric", fontsize=20)
-    else:
-        ax.set_ylabel("")
+                      hue='Algorithm', ax=ax, legend=False, markers=True, dashes=True, style='Algorithm', palette=palette)
+    ax.set_xlabel("Next farthest vector's index", fontsize=20)
+    ax.set_ylabel("Average Space Filling Metric", fontsize=20)
     ax.tick_params(axis='both', which='major', labelsize=16)
     fig.tight_layout()
     os.makedirs(plot_dir, exist_ok=True)
@@ -215,20 +227,18 @@ for i_start, legend, xlabel, ylabel in zip(i_starts, draw_legend, draw_xlabel, d
     family_mask = space_filling_report_df['family'] == family_id
     report_df = space_filling_report_df[i_start_mask & family_mask]
     report_df['Algorithm'] = report_df['algorithm'].map(algorithm_labels)
+    plt.rcParams.update({'font.size': 12})
     ax = sns.lineplot(data=report_df, x='iteration', y='dt',
-                      hue='Algorithm', style='Algorithm', markers=True, dashes=True, ax=ax)
+                      hue='Algorithm', style='Algorithm', markers=True, dashes=True, palette=palette, ax=ax)
     ax.set_ylabel("Time (s)", fontsize=20)
-    ax.set_xlabel("Iteration", fontsize=20)
+    ax.set_xlabel("Next farthest vector's index", fontsize=20)
     ax.tick_params(axis='both', which='major', labelsize=16)
+    ax.legend(loc='lower center', bbox_to_anchor=(0.5, +0.15), ncol=2)
     fig.tight_layout()
-    if save:
-        os.makedirs(plot_dir, exist_ok=True)
-        fig.savefig(os.path.join(
-            plot_dir, f'space-filling-{i_start}-time.png'))
-        print(
-            f"Saved space filling plot for {reference_algorithm} at {i_start} to {plot_dir}")
-    else:
-        plt.show()
+    os.makedirs(plot_dir, exist_ok=True)
+    fig.savefig(os.path.join(plot_dir, f'space-filling-{i_start}-time.png'))
+    print(
+        f"Saved space filling plot for {reference_algorithm} at {i_start} to {plot_dir}")
 
     # Plot the map
     experiment = prepare_experiment(num_voters, num_candidates)
@@ -237,7 +247,7 @@ for i_start, legend, xlabel, ylabel in zip(i_starts, draw_legend, draw_xlabel, d
     post_ref_vectors = reference_new_approvalwise_vectors[i_start:]
     family_label = family_labels[family_id]
     add_sampled_elections_to_experiment(
-        approvalwise_vectors, experiment, family_label, color='gray', seed=0)
+        approvalwise_vectors, experiment, family_label, color='cyan', seed=0)
     if i_start > 0:
         add_sampled_elections_to_experiment(
             pre_ref_vectors, experiment, 'Added true vectors', color='violet', seed=0)
