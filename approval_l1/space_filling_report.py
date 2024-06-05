@@ -1,5 +1,5 @@
+# %%
 import argparse
-from typing import Iterable
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
@@ -16,30 +16,25 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument('--reference_solver_id', type=str,
                     help='The ID of the solver used for reference', default='gurobi')
-# parser.add_argument('--solver_id', type=str,
-#                     help='The ID of the solver used', required=True)
 parser.add_argument('--num_candidates', type=int,
                     help='The number of candidates', default=20)
 parser.add_argument('--num_voters', type=int,
                     help='The number of voters', default=50)
 parser.add_argument('--family', type=str,
                     help='The family of elections', default='euclidean')
-parser.add_argument('--save', type=bool, default=True, help='Save the plot')
 
 args = parser.parse_args()
-
 reference_algorithm = args.reference_solver_id
-# algorithm = args.solver_id
 num_candidates = args.num_candidates
 num_voters = args.num_voters
 family_id = args.family
-save = args.save
 
-
+main_dir = '.'
+# main_dir = '~/Development/AGH/mgr/holes-in-elections/approval_l1'
 experiment_id = f'{num_candidates}x{num_voters}/{family_id}'
-
-results_dir = os.path.join('results', experiment_id)
-plot_dir = os.path.join('plots', experiment_id.replace('_', '-'))
+experiment_dir = os.path.join('experiments', experiment_id)
+results_dir = os.path.join(main_dir, 'results', experiment_id)
+plot_dir = os.path.join(main_dir, 'plots', experiment_id.replace('_', '-'))
 os.makedirs(plot_dir, exist_ok=True)
 
 with open(os.path.join(results_dir, reference_algorithm, 'new-approvalwise-vectors.txt'), 'r') as file:
@@ -107,8 +102,6 @@ def calculate_space_filling_metric_heuristic(algorithm: str, i_start: int, trial
         trial_metrics.append(metrics)
     return trial_metrics
 
-# def print_map(algorithms: Iterable[str], i_start: int):
-
 
 def prepare_experiment(num_voters: int, num_candidates: int) -> mapel.ApprovalElectionExperiment:
     experiment = mapel.prepare_online_approval_experiment(
@@ -159,6 +152,17 @@ i_starts = [0, 3, 5, 7]
 space_filling_report_df = pd.read_csv(
     os.path.join(results_dir, '..', 'space_filling_report.csv'))
 
+reference_report_df = pd.read_csv(
+    os.path.join(experiment_dir, 'reference_report.csv'))
+reference_report_df['algorithm'] = reference_algorithm
+reference_report_df['family'] = family_id
+reference_report_df['i_start'] = 0
+reference_report_df['i_trial'] = 0
+reference_report_df['iteration'] = reference_report_df['i']
+reference_report_df = pd.concat(
+    [reference_report_df[reference_report_df['i'] >= i_start].assign(i_start=i_start) for i_start in i_starts])
+
+
 if 'iteration' not in space_filling_report_df.columns:
     iterations = []
     start, trial = None, None
@@ -173,8 +177,10 @@ if 'iteration' not in space_filling_report_df.columns:
         iterations.append(iteration)
     space_filling_report_df['iteration'] = iterations
 
+space_filling_report_df = pd.concat(
+    [space_filling_report_df, reference_report_df])
 
-# Plot the plain map
+# %% Plot the plain map
 experiment = prepare_experiment(num_voters, num_candidates)
 add_compass(experiment)
 add_sampled_elections_to_experiment(
@@ -189,9 +195,8 @@ plt.rcParams.update({'font.size': 10})
 experiment.print_map_2d(legend=True, saveas=map_filepath, show=False)
 
 
+# %% Plot the space filling metric
 for i_start in i_starts:
-
-    # Plot the space filling metric
     metrics_rows = []
     for algorithm, trials in heuristics_trials:
         trial_metrics = calculate_space_filling_metric_heuristic(
@@ -214,6 +219,8 @@ for i_start in i_starts:
     ax.set_xlabel("Next farthest vector's index", fontsize=20)
     ax.set_ylabel("Average Space Filling Metric", fontsize=20)
     ax.tick_params(axis='both', which='major', labelsize=16)
+    ax.set_xticks(range(i_start, len(reference_new_approvalwise_vectors)))
+    plt.grid(True)
     fig.tight_layout()
     os.makedirs(plot_dir, exist_ok=True)
     fig.savefig(os.path.join(
@@ -221,7 +228,8 @@ for i_start in i_starts:
     print(
         f"Saved space filling plot for {reference_algorithm} at {i_start} to {plot_dir}")
 
-    # Plot the time
+# %% Plot the time
+for i_start in i_starts:
     fig, ax = plt.subplots()
     i_start_mask = space_filling_report_df['i_start'] == i_start
     family_mask = space_filling_report_df['family'] == family_id
@@ -230,17 +238,21 @@ for i_start in i_starts:
     plt.rcParams.update({'font.size': 12})
     ax = sns.lineplot(data=report_df, x='iteration', y='dt',
                       hue='Algorithm', style='Algorithm', markers=True, dashes=True, palette=palette, ax=ax)
-    ax.set_ylabel("Time (s)", fontsize=20)
+    ax.set(yscale='log')
+    ax.set_ylabel("Time (s)\n(logarithmic scale)", fontsize=20)
     ax.set_xlabel("Next farthest vector's index", fontsize=20)
     ax.tick_params(axis='both', which='major', labelsize=16)
-    ax.legend(loc='lower center', bbox_to_anchor=(0.5, +0.15), ncol=2)
+    ax.set_xticks(range(i_start, len(reference_new_approvalwise_vectors)))
+    ax.legend(loc='center', ncol=2)
+    # fig.suptitle(f"Logarithmic scale", fontsize=20)
+    plt.grid(True)
     fig.tight_layout()
-    os.makedirs(plot_dir, exist_ok=True)
     fig.savefig(os.path.join(plot_dir, f'space-filling-{i_start}-time.png'))
     print(
         f"Saved space filling plot for {reference_algorithm} at {i_start} to {plot_dir}")
 
-    # Plot the map
+# %% Plot the map
+for i_start in i_starts:
     experiment = prepare_experiment(num_voters, num_candidates)
     add_compass(experiment)
     pre_ref_vectors = reference_new_approvalwise_vectors[:i_start]
