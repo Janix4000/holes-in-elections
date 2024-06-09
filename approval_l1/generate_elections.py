@@ -53,7 +53,7 @@ def generate(num_candidates: int, num_voters: int, num_instances: int, family_id
             t = int(np.round(np.sqrt(num_instances)))
             k = num_instances // t
             params = product(np.linspace(0, 1, t), np.linspace(0, 1, k))
-            for p, phi in tqdm(params):
+            for p, phi in tqdm(list(params)):
                 election = mapel.generate_approval_election(
                     election_id=f'p={p:.2f},phi={phi:.2}',
                     num_candidates=num_candidates,
@@ -70,7 +70,7 @@ def generate(num_candidates: int, num_voters: int, num_instances: int, family_id
             t = int(np.round(np.sqrt(num_instances)))
             k = num_instances // t
             params = product(np.linspace(0, 1, t), np.linspace(0, 1, k))
-            for p, alpha in tqdm(params):
+            for p, alpha in tqdm(list(params)):
                 election = mapel.generate_approval_election(
                     election_id=f'p={p:.2f},alpha={alpha:.2}',
                     num_candidates=num_candidates,
