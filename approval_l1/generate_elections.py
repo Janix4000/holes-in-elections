@@ -1,8 +1,10 @@
 import argparse
+from itertools import product
 import os
 import pickle
 import mapel.elections as mapel
 import numpy as np
+from tqdm import tqdm
 
 from scripts.approvalwise_vector import dump_to_text_file, get_approvalwise_vectors
 
@@ -26,7 +28,7 @@ def generate(num_candidates: int, num_voters: int, num_instances: int, family_id
                                         num_voters=num_voters, family_id='euclidean_1d', color='blue')
             experiment.add_empty_family(culture_id=family_id, num_candidates=num_candidates,
                                         num_voters=num_voters, family_id='euclidean_2d', color='green')
-            for radius in np.linspace(0, 0.5, num_instances // 2):
+            for radius in tqdm(np.linspace(0, 0.5, num_instances // 2)):
                 d1 = mapel.generate_approval_election(
                     election_id=f'1d_r={radius:0.2}',
                     num_candidates=num_candidates,
@@ -50,35 +52,35 @@ def generate(num_candidates: int, num_voters: int, num_instances: int, family_id
                                         num_voters=num_voters, family_id=family_id, color='green')
             t = int(np.round(np.sqrt(num_instances)))
             k = num_instances // t
-            for p in np.linspace(0, 1, t):
-                for phi in np.linspace(0, 1, k):
-                    election = mapel.generate_approval_election(
-                        election_id=f'p={p:.2f},phi={phi:.2}',
-                        num_candidates=num_candidates,
-                        num_voters=num_voters,
-                        culture_id=family_id,
-                        params={'p': p, 'phi': phi}
-                    )
-                    election.instance_id = f'p={p:.2f},phi={phi:.2}'
-                    experiment.add_election_to_family(
-                        election, family_id=family_id)
+            params = product(np.linspace(0, 1, t), np.linspace(0, 1, k))
+            for p, phi in tqdm(params):
+                election = mapel.generate_approval_election(
+                    election_id=f'p={p:.2f},phi={phi:.2}',
+                    num_candidates=num_candidates,
+                    num_voters=num_voters,
+                    culture_id=family_id,
+                    params={'p': p, 'phi': phi}
+                )
+                election.instance_id = f'p={p:.2f},phi={phi:.2}'
+                experiment.add_election_to_family(
+                    election, family_id=family_id)
         case "truncated_urn":
             experiment.add_empty_family(culture_id=family_id, num_candidates=num_candidates,
                                         num_voters=num_voters, family_id=family_id, color='green')
             t = int(np.round(np.sqrt(num_instances)))
             k = num_instances // t
-            for p in np.linspace(0, 1, t):
-                for alpha in np.linspace(0, 1, k):
-                    election = mapel.generate_approval_election(
-                        election_id=f'p={p:.2f},alpha={alpha:.2}',
-                        num_candidates=num_candidates,
-                        num_voters=num_voters,
-                        culture_id=family_id,
-                        params={'p': p, 'alpha': alpha}
-                    )
-                    election.instance_id = f'p={p:.2f},alpha={alpha:.2}'
-                    experiment.add_election_to_family(
-                        election, family_id=family_id)
+            params = product(np.linspace(0, 1, t), np.linspace(0, 1, k))
+            for p, alpha in tqdm(params):
+                election = mapel.generate_approval_election(
+                    election_id=f'p={p:.2f},alpha={alpha:.2}',
+                    num_candidates=num_candidates,
+                    num_voters=num_voters,
+                    culture_id=family_id,
+                    params={'p': p, 'alpha': alpha}
+                )
+                election.instance_id = f'p={p:.2f},alpha={alpha:.2}'
+                experiment.add_election_to_family(
+                    election, family_id=family_id)
 
     experiment.compute_distances(distance_id='l1-approvalwise')
     experiment.embed_2d(embedding_id="fr")
