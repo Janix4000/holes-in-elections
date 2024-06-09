@@ -219,7 +219,8 @@ for i_start in i_starts:
     ax.set_xlabel("Next farthest vector's index", fontsize=20)
     ax.set_ylabel("Average Space Filling Metric", fontsize=20)
     ax.tick_params(axis='both', which='major', labelsize=16)
-    ax.set_xticks(range(i_start, len(reference_new_approvalwise_vectors)))
+    ax.set_xticks(
+        range(i_start + 1, len(reference_new_approvalwise_vectors) + 1))
     plt.grid(True)
     fig.tight_layout()
     os.makedirs(plot_dir, exist_ok=True)
@@ -242,7 +243,8 @@ for i_start in i_starts:
     ax.set_ylabel("Time (s)\n(logarithmic scale)", fontsize=20)
     ax.set_xlabel("Next farthest vector's index", fontsize=20)
     ax.tick_params(axis='both', which='major', labelsize=16)
-    ax.set_xticks(range(i_start, len(reference_new_approvalwise_vectors)))
+    ax.set_xticks(
+        range(i_start + 1, len(reference_new_approvalwise_vectors) + 1))
     ax.legend(loc='center', ncol=2)
     # fig.suptitle(f"Logarithmic scale", fontsize=20)
     plt.grid(True)

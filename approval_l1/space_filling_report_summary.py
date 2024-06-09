@@ -3,10 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os
 import numpy as np
-import pickle
-from scripts.approvalwise_vector import get_approvalwise_vectors, load_from_text_file
-
-from seaborn import barplot
+from scripts.approvalwise_vector import load_from_text_file
 
 plt.rcParams['figure.dpi'] = 300
 
@@ -91,7 +88,7 @@ def calculate_space_filling_metric_heuristic(algorithm: str, i_start: int, trial
     return trial_metrics
 
 
-last_iteration = 10
+last_iteration = 9
 
 heuristics_trials = [
     ('basin_hopping', 10),

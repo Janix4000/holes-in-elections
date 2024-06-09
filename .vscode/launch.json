@@ -13,13 +13,11 @@
       "justMyCode": true,
       "args": [
         "--num_candidates",
-        "20", 
-        "--num_voters",
         "50",
+        "--num_voters",
+        "100",
         "--family",
-        "noise",
-        "--save",
-        "1"
+        "euclidean",
       ],
       "cwd": "${workspaceFolder}/approval_l1/"
     },
