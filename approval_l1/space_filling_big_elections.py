@@ -36,10 +36,10 @@ csv_report_path = os.path.join(
 
 i_trials = range(trials)
 
+print(
+    f'Generating farthest elections for {experiment_id} using {algorithm_id} algorithm')
 
 for i_trial in i_trials:
-    print(f'Start {family_id} {algorithm_id} {i_trial}')
-
     results_dir = os.path.join('results', experiment_id, family_id)
     res_elections_path = os.path.join(
         results_dir, algorithm_id, f'start_0',  f'new_approvalwise_vectors_trial_{i_trial}.txt')
@@ -63,11 +63,12 @@ for i_trial in i_trials:
         report_rows.append(
             [family_id, algorithm_id, 0, i_trial, i, distance, dt])
 
-    print(f'Done {family_id} {algorithm_id} {i_trial}')
-
     with open(res_elections_path, 'w') as file:
         dump_to_text_file(new_approvalwise_vectors, file)
 
     csv_report = pd.DataFrame(report_rows, columns=[
                               'family', 'algorithm', 'i_start', 'i_trial', 'iteration', 'distance', 'dt'])
     csv_report.to_csv(csv_report_path, index=False)
+
+print(
+    f'Farthest elections for {experiment_id} using {algorithm_id} algorithm generated')
