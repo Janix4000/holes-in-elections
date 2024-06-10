@@ -23,8 +23,8 @@ args = parser.parse_args()
 
 num_candidates = args.num_candidates
 num_voters = args.num_voters
-algorithm_id = args.algorithm_id
-family_id = args.family_id
+algorithm_id = args.algorithm
+family_id = args.family
 trials = args.trials
 steps = args.steps
 
