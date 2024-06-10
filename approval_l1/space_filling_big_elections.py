@@ -37,7 +37,7 @@ csv_report_path = os.path.join(
 i_trials = range(trials)
 
 print(
-    f'Generating farthest elections for {experiment_id} using {algorithm_id} algorithm')
+    f'Generating farthest elections for {experiment_id} {family_id} using {algorithm_id} algorithm')
 
 for i_trial in i_trials:
     results_dir = os.path.join('results', experiment_id, family_id)
@@ -71,4 +71,4 @@ for i_trial in i_trials:
     csv_report.to_csv(csv_report_path, index=False)
 
 print(
-    f'Farthest elections for {experiment_id} using {algorithm_id} algorithm generated')
+    f'Farthest elections for {experiment_id} {family_id} using {algorithm_id} algorithm generated')
