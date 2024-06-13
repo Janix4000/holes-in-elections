@@ -30,11 +30,11 @@ steps = args.steps
 
 
 experiment_id = f'{num_candidates}x{num_voters}'
-report_rows = []
 csv_report_path = os.path.join(
-    'results', experiment_id, family_id, f'space_filling_report.csv')
+    'results', experiment_id, family_id, algorithm_id, f'space_filling_report.csv')
 
 i_trials = range(trials)
+report_rows = []
 
 print(
     f'Generating farthest elections for {experiment_id} {family_id} using {algorithm_id} algorithm')

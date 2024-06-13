@@ -123,8 +123,13 @@ palette = {label: algorithm_colors.get(
     algo_id) for algo_id, label in algorithm_labels.items()}
 
 
-space_filling_report_df = pd.read_csv(os.path.join(
-    results_dir, f'space_filling_report.csv'))
+# %% Load reports
+f'space_filling_report.csv'
+report_base_dir = os.path.join(results_dir, experiment_id, family_id)
+space_filling_reports_df = [
+    pd.read_csv(os.path.join(report_base_dir, heuristic, f'space_filling_report.csv')) for heuristic, _trial in heuristics_trials
+]
+space_filling_report_df = pd.concat(space_filling_reports_df)
 
 
 if 'iteration' not in space_filling_report_df.columns:
