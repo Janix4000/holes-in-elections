@@ -1,13 +1,16 @@
 # %%
 import argparse
-import pandas as pd
-import matplotlib.pyplot as plt
 import os
-import numpy as np
-import mapel.elections as mapel
-from scripts.approvalwise_vector import add_sampled_elections_to_experiment, load_from_text_file
 
+import mapel.elections as mapel
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 import seaborn as sns
+from scripts.approvalwise_vector import (
+    add_sampled_elections_to_experiment,
+    load_from_text_file,
+)
 
 plt.rcParams['figure.dpi'] = 300
 
@@ -121,7 +124,7 @@ palette = {label: algorithm_colors.get(
 
 
 space_filling_report_df = pd.read_csv(os.path.join(
-    results_dir, '..', 'space_filling_report.csv'))
+    results_dir, f'space_filling_report.csv'))
 
 
 if 'iteration' not in space_filling_report_df.columns:

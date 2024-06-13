@@ -1,10 +1,10 @@
-import time
-import pandas as pd
-import os
-from scripts.approvalwise_vector import dump_to_text_file, load_from_text_file
-from scripts.algorithms import algorithms
 import argparse
+import os
+import time
 
+import pandas as pd
+from scripts.algorithms import algorithms
+from scripts.approvalwise_vector import dump_to_text_file, load_from_text_file
 
 parser = argparse.ArgumentParser(
     description='Generate farthest elections for space filling using only heuristic')
@@ -32,7 +32,7 @@ steps = args.steps
 experiment_id = f'{num_candidates}x{num_voters}'
 report_rows = []
 csv_report_path = os.path.join(
-    'results', experiment_id, f'space_filling_report.csv')
+    'results', experiment_id, family_id, f'space_filling_report.csv')
 
 i_trials = range(trials)
 
