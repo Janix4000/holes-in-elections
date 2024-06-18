@@ -1,12 +1,12 @@
 import argparse
-from itertools import product
 import os
 import pickle
+from itertools import product
+
 import mapel.elections as mapel
 import numpy as np
-from tqdm import tqdm
-
 from scripts.approvalwise_vector import dump_to_text_file, get_approvalwise_vectors
+from tqdm import tqdm
 
 
 def generate(num_candidates: int, num_voters: int, num_instances: int, family_id: str) -> mapel.ApprovalElectionExperiment:
@@ -28,7 +28,7 @@ def generate(num_candidates: int, num_voters: int, num_instances: int, family_id
                                         num_voters=num_voters, family_id='euclidean_1d', color='blue')
             experiment.add_empty_family(culture_id=family_id, num_candidates=num_candidates,
                                         num_voters=num_voters, family_id='euclidean_2d', color='green')
-            for radius in tqdm(np.linspace(0, 0.5, num_instances // 2)):
+            for radius in tqdm(np.linspace(0.1, 0.5, num_instances // 2)):
                 d1 = mapel.generate_approval_election(
                     election_id=f'1d_r={radius:0.2}',
                     num_candidates=num_candidates,
@@ -52,7 +52,8 @@ def generate(num_candidates: int, num_voters: int, num_instances: int, family_id
                                         num_voters=num_voters, family_id=family_id, color='green')
             t = int(np.round(np.sqrt(num_instances)))
             k = num_instances // t
-            params = product(np.linspace(0, 1, t), np.linspace(0, 1, k))
+            params = product(np.linspace(0.05, 0.95, t),
+                             np.linspace(0.05, 0.95, k))
             for p, phi in tqdm(list(params)):
                 election = mapel.generate_approval_election(
                     election_id=f'p={p:.2f},phi={phi:.2}',
@@ -69,7 +70,8 @@ def generate(num_candidates: int, num_voters: int, num_instances: int, family_id
                                         num_voters=num_voters, family_id=family_id, color='green')
             t = int(np.round(np.sqrt(num_instances)))
             k = num_instances // t
-            params = product(np.linspace(0, 1, t), np.linspace(0, 1, k))
+            params = product(np.linspace(0.05, 0.95, t),
+                             np.linspace(0.05, 0.95, k))
             for p, alpha in tqdm(list(params)):
                 election = mapel.generate_approval_election(
                     election_id=f'p={p:.2f},alpha={alpha:.2}',
