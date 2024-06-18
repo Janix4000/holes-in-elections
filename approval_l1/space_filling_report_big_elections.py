@@ -124,10 +124,8 @@ palette = {label: algorithm_colors.get(
 
 
 # %% Load reports
-f'space_filling_report.csv'
-report_base_dir = os.path.join(results_dir, experiment_id, family_id)
 space_filling_reports_df = [
-    pd.read_csv(os.path.join(report_base_dir, heuristic, f'space_filling_report.csv')) for heuristic, _trial in heuristics_trials
+    pd.read_csv(os.path.join(results_dir, heuristic, f'space_filling_report.csv')) for heuristic, _trial in heuristics_trials
 ]
 space_filling_report_df = pd.concat(space_filling_reports_df)
 
@@ -146,18 +144,7 @@ if 'iteration' not in space_filling_report_df.columns:
         iterations.append(iteration)
     space_filling_report_df['iteration'] = iterations
 
-# %% Plot the plain map
-experiment = prepare_experiment(num_voters, num_candidates)
-add_compass(experiment)
-add_sampled_elections_to_experiment(
-    approvalwise_vectors, experiment, family_labels[family_id], color='cyan', seed=0)
-experiment.compute_distances(distance_id='l1-approvalwise')
-experiment.embed_2d(embedding_id="fr")
-map_filepath = os.path.join(
-    '..', plot_dir, f'space-filling-map.png')
-plt.rcParams.update({'font.size': 10})
-experiment.print_map_2d(legend=True, saveas=map_filepath, show=False)
-
+space_filling_report_df['iteration'] += 1
 
 # %% Plot the space filling metric
 i_start = 0
@@ -171,14 +158,15 @@ for algorithm, trials in heuristics_trials:
     metrics_rows.extend(metrics_flatten)
 metrics_df = pd.DataFrame(metrics_rows, columns=[
     'Algorithm', 'i', 'metric', 'trial'])
+metrics_df['i'] += 1
 fig, ax = plt.subplots()
 ax = sns.lineplot(data=metrics_df, x='i', y='metric',
                   hue='Algorithm', ax=ax, legend=False, markers=True, dashes=True, style='Algorithm', palette=palette)
 ax.set_xlabel("Next farthest vector's index", fontsize=20)
 ax.set_ylabel("Average Space Filling Metric", fontsize=20)
 ax.tick_params(axis='both', which='major', labelsize=16)
-ax.set_xticks(
-    range(i_start + 1, num_generated + 1))
+# ax.set_xticks(
+#     range(i_start + 1, num_generated + 1))
 plt.grid(True)
 fig.tight_layout()
 os.makedirs(plot_dir, exist_ok=True)
@@ -201,14 +189,26 @@ ax.set(yscale='log')
 ax.set_ylabel("Time (s)\n(logarithmic scale)", fontsize=20)
 ax.set_xlabel("Next farthest vector's index", fontsize=20)
 ax.tick_params(axis='both', which='major', labelsize=16)
-ax.set_xticks(
-    range(i_start + 1, num_generated + 1))
+# ax.set_xticks(
+#     range(i_start + 1, num_generated + 1))
 ax.legend(loc='center', ncol=2)
 plt.grid(True)
 fig.tight_layout()
 fig.savefig(os.path.join(plot_dir, f'space-filling-{i_start}-time.png'))
 print(
     f"Saved time plot for for {family_id} to {plot_dir}")
+
+# %% Plot the plain map
+experiment = prepare_experiment(num_voters, num_candidates)
+add_compass(experiment)
+add_sampled_elections_to_experiment(
+    approvalwise_vectors, experiment, family_labels[family_id], color='cyan', seed=0)
+experiment.compute_distances(distance_id='l1-approvalwise')
+experiment.embed_2d(embedding_id="fr")
+map_filepath = os.path.join(
+    '..', plot_dir, f'space-filling-map.png')
+plt.rcParams.update({'font.size': 10})
+experiment.print_map_2d(legend=True, saveas=map_filepath, show=False)
 
 # %% Plot the map
 i_start = 0
