@@ -1,4 +1,5 @@
 from typing import Iterable
+
 import mapel.elections as mapel
 import numpy as np
 
@@ -87,3 +88,40 @@ def load_from_text_file(file) -> dict[str, ApprovalwiseVector]:
             vector, num_voters)
 
     return approvalwise_vectors
+
+
+def _get_prob_distr_next_height(max_val: int, M: int, t: int) -> np.ndarray:
+    max_val_prob = (M - t + 2) / (M - t + max_val + 2)
+    multipliers = np.array([k / (M - t + k + 1)
+                            for k in range(1, max_val + 1)])
+    multipliers = multipliers[::-1]
+    np.multiply.accumulate(multipliers, out=multipliers)
+    return np.concatenate((multipliers[::-1], [1.0])) * max_val_prob
+
+
+def uniform_approvalwise_vector(num_voters: int, num_candidates: int, rng=None) -> ApprovalwiseVector:
+    M = num_candidates
+    N = num_voters
+    rng = rng or np.random.default_rng()
+    approvalwise_vector = np.array([None] * num_candidates)
+    approvalwise_vector[-1] = N
+    for t in range(1, num_candidates + 1):
+        i = t - 1
+        max_val = approvalwise_vector[i - 1]
+        probabilities = _get_prob_distr_next_height(max_val, M, t)
+        approvalwise_vector[i] = rng.choice(max_val + 1, p=probabilities)
+    return ApprovalwiseVector(approvalwise_vector, num_voters)
+
+
+def not_uniform_sample_approvalwise_vector(num_voters: int, num_candidates: int, seed: int | None = None) -> ApprovalwiseVector:
+    rng = np.random.default_rng(seed)
+    M = num_candidates
+    N = num_voters + 1
+    rng = np.random.default_rng(seed)
+    approvalwise_vector = np.array([None] * num_candidates)
+    approvalwise_vector[-1] = N
+    for t in range(1, num_candidates + 1):
+        i = t - 1
+        max_val = approvalwise_vector[i - 1]
+        approvalwise_vector[i] = rng.integers(max_val + 1)
+    return ApprovalwiseVector(approvalwise_vector, num_voters)
