@@ -6,6 +6,7 @@ from typing import Optional
 import numpy as np
 from scipy.optimize import basinhopping
 from scripts.approvalwise_vector import ApprovalwiseVector, uniform_approvalwise_vector
+from scripts.bindings import greedy_dp
 from scripts.distances import l1_across
 from scripts.sampling_methods import (
     find_best_starting_step_vector,
@@ -44,6 +45,8 @@ def __select_x0(x0, approvalwise_vectors, num_voters, num_candidates, rng):
         candidates = random_approvalwise_vectors(
             num_voters, num_candidates, tries=num_start, rng=rng)
         return find_best_starting_step_vector(approvalwise_vectors, candidates)
+    elif x0 == 'greedy_dp':
+        return greedy_dp(approvalwise_vectors)[0]
     else:
         return np.array(x0)
 

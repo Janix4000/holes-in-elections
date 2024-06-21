@@ -26,6 +26,7 @@ trials = args.trials
 steps = args.steps
 
 starts = (
+    'greedy_dp',
     'uniform',
     ('uniform', 1),
     'random',
