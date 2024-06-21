@@ -9,9 +9,9 @@ from scripts.basin_hopping import basin_hopping
 parser = argparse.ArgumentParser(
     description='Generate farthest elections for space filling using only heuristic')
 parser.add_argument('--num_candidates', type=int,
-                    default=50, help='Number of candidates')
+                    default=20, help='Number of candidates')
 parser.add_argument('--num_voters', type=int,
-                    default=500, help='Number of voters')
+                    default=50, help='Number of voters')
 parser.add_argument('--family', type=str,
                     default='euclidean', help='Family ID')
 parser.add_argument('--trials', type=int, default=10, help='Number of trials')
