@@ -26,14 +26,14 @@ trials = args.trials
 steps = args.steps
 
 starts = (
+    'uniform',
+    ('uniform', 1),
     'random',
     ('random', 1),
     'resampling',
     ('resampling', 1),
     'step_vector',
     'mix',
-    'uniform',
-    ('uniform', 1)
 )
 
 

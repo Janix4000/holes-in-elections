@@ -36,7 +36,7 @@ def __select_x0(x0, approvalwise_vectors, num_voters, num_candidates, rng):
         return find_best_vector(approvalwise_vectors, random_candidates)
     elif x0 == 'uniform':
         random_candidates = [uniform_approvalwise_vector(
-            num_voters, num_candidates, seed=rng) for _ in range(num_start)]
+            num_voters, num_candidates, rng=rng) for _ in range(num_start)]
         return find_best_vector(approvalwise_vectors, random_candidates)
     elif x0 == 'step_vector':
         return find_best_starting_step_vector(approvalwise_vectors)

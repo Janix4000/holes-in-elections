@@ -103,7 +103,7 @@ def uniform_approvalwise_vector(num_voters: int, num_candidates: int, rng=None) 
     M = num_candidates
     N = num_voters
     rng = rng or np.random.default_rng()
-    approvalwise_vector = np.array([None] * num_candidates)
+    approvalwise_vector = np.array([-1] * num_candidates, dtype=int)
     approvalwise_vector[-1] = N
     for t in range(1, num_candidates + 1):
         i = t - 1
